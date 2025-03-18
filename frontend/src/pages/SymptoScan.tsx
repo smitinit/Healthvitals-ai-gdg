@@ -1,0 +1,268 @@
+"use client";
+
+import type React from "react";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  FileText,
+  Stethoscope,
+} from "lucide-react";
+import type { Symptom, AnalysisResult } from "@/types/symptom-types";
+import { bodyAreas } from "@/data/symptom-data";
+import { generateAnalysisResult } from "@/utils/symptom-utils";
+import SymptomSelector from "@/components/symptom-selector";
+import PersonalInfo from "@/components/personal-info";
+import AdditionalInfo from "@/components/additional-info";
+import AnalysisResultComponent from "@/components/analysis-result/analysis-result";
+import LoadingAnalysis from "@/components/loading-analysis";
+import ConfettiEffect from "@/components/confetti-effect";
+
+export default function SymptomScanEnhanced() {
+  const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>([]);
+  const [age, setAge] = useState<string>("");
+  const [gender, setGender] = useState<string>("");
+  const [medicalHistory, setMedicalHistory] = useState<string[]>([]);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  // Update progress based on current step
+  useEffect(() => {
+    const progressMap: { [key: number]: number } = {
+      1: 25,
+      2: 50,
+      3: 75,
+      4: 100,
+    };
+    setProgress(progressMap[step] || 0);
+  }, [step]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simulate API call with progress
+    let loadingProgress = 0;
+    const interval = setInterval(() => {
+      loadingProgress += 5;
+      if (loadingProgress >= 100) {
+        clearInterval(interval);
+
+        // Generate analysis result based on symptoms
+        const analysisResult = generateAnalysisResult(selectedSymptoms);
+        setResult(analysisResult);
+        setIsLoading(false);
+        setStep(4);
+        setShowConfetti(true);
+      }
+    }, 50);
+  };
+
+  const resetDemo = () => {
+    setStep(1);
+    setSelectedSymptoms([]);
+    setAge("");
+    setGender("");
+    setMedicalHistory([]);
+    setResult(null);
+    setShowConfetti(false);
+  };
+
+  const handleNextStep = () => {
+    if (step < 4) {
+      setStep(step + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  return (
+    <Card className="w-full shadow-lg border-primary/10 mt-0 pt-0">
+      <CardHeader className="bg-primary/5 border-b rounded-t-2xl">
+        <div className="flex items-center justify-between pt-6 ">
+          <div>
+            <CardTitle className="text-primary flex items-center gap-2 text-2xl ">
+              <Stethoscope className="h-6 w-6 " />
+              SymptomScan Pro
+            </CardTitle>
+            <CardDescription>
+              Advanced symptom analysis with personalized insights
+            </CardDescription>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" onClick={resetDemo}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Start Over</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </CardHeader>
+      <div className="p-4 border-b bg-muted/10">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Progress</span>
+            <span className="text-xs text-muted-foreground">
+              Step {step} of 4
+            </span>
+          </div>
+          <span className="text-sm font-medium">{progress}%</span>
+        </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`step-${step}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+        >
+          <CardContent className="p-6">
+            {step === 1 && (
+              <>
+                <h2 className="text-xl font-semibold mb-4">
+                  Select Your Symptoms
+                </h2>
+                <SymptomSelector
+                  bodyAreas={bodyAreas}
+                  selectedSymptoms={selectedSymptoms}
+                  setSelectedSymptoms={setSelectedSymptoms}
+                />
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <h2 className="text-xl font-semibold mb-4">
+                  Personal Information
+                </h2>
+                <PersonalInfo
+                  age={age}
+                  setAge={setAge}
+                  gender={gender}
+                  setGender={setGender}
+                  medicalHistory={medicalHistory}
+                  setMedicalHistory={setMedicalHistory}
+                />
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <h2 className="text-xl font-semibold mb-4">
+                  Additional Information
+                </h2>
+                <AdditionalInfo />
+              </>
+            )}
+
+            {step === 4 && (
+              <>
+                <h2 className="text-xl font-semibold mb-4">Analysis Results</h2>
+                {isLoading ? (
+                  <LoadingAnalysis />
+                ) : (
+                  result && (
+                    <AnalysisResultComponent
+                      result={result}
+                      selectedSymptoms={selectedSymptoms}
+                    />
+                  )
+                )}
+              </>
+            )}
+          </CardContent>
+        </motion.div>
+      </AnimatePresence>
+      <CardFooter className="border-t bg-muted/20 flex justify-between p-4">
+        {step < 4 ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={handlePrevStep}
+              disabled={step === 1}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            {step < 3 ? (
+              <Button
+                onClick={handleNextStep}
+                disabled={
+                  (step === 1 && selectedSymptoms.length === 0) ||
+                  (step === 2 && (!age || !gender))
+                }
+                className="gap-2"
+              >
+                Next
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={isLoading}
+                className="gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    Analyze Symptoms
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <Button variant="outline" onClick={resetDemo}>
+              Start New Analysis
+            </Button>
+            <Button>
+              <FileText className="mr-2 h-4 w-4" />
+              Download Report
+            </Button>
+          </>
+        )}
+      </CardFooter>
+      <ConfettiEffect trigger={showConfetti} />
+    </Card>
+  );
+}
