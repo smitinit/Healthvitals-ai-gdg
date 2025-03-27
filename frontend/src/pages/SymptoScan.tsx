@@ -173,6 +173,8 @@ export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean
           const token = await getToken();
           if (token) {
             headers["Authorization"] = `Bearer ${token}`;
+            // Store token in sessionStorage for PDF download functionality
+            window.sessionStorage.setItem('clerk-auth-token', token);
             console.log("Added authorization token to request");
           } else {
             console.error("No token available despite user being signed in");

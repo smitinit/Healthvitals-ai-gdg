@@ -17,13 +17,87 @@ import {
   Shield,
   Check,
   X,
+  FileDown,
+  Clock,
+  CheckCircle,
 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface OverviewTabProps {
   result: AnalysisResult;
 }
 
 export default function OverviewTab({ result }: OverviewTabProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case "high":
+        return "bg-red-500";
+      case "medium":
+        return "bg-yellow-500";
+      case "low":
+        return "bg-green-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getUrgencyIcon = (urgency: string) => {
+    switch (urgency) {
+      case "high":
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case "medium":
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case "low":
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      default:
+        return null;
+    }
+  };
+  
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true);
+      
+      // Make API request to generate PDF
+      const response = await fetch('/api/public/generate-overview-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(result),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      // Download the PDF file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'healthvitals-overview-report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF report. Please try again later.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -266,6 +340,18 @@ export default function OverviewTab({ result }: OverviewTabProps) {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* Download Report Button */}
+      <div className="flex justify-center mt-8">
+        <Button 
+          onClick={handleDownloadPDF} 
+          disabled={isDownloading}
+          className="w-full max-w-md"
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          {isDownloading ? 'Generating PDF...' : 'Download Overview Report'}
+        </Button>
       </div>
     </div>
   );

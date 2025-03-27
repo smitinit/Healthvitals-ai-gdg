@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, send_file
 from flask_cors import CORS
 import os
 import json
@@ -8,9 +8,14 @@ from dotenv import load_dotenv
 from config import Config
 from utils import parse_gemini_response, validate_symptoms, setup_logging, log_gemini_response, log_debug
 from middleware import rate_limit, add_security_headers, validate_request_data
-from auth import require_auth, optional_auth, get_current_user_id
+from auth import require_auth, optional_auth, get_current_user_id, is_authenticated
 import re
 import time
+import uuid
+import socket
+import traceback
+from collections import defaultdict, Counter
+from pdf_generator import generate_overview_pdf, generate_details_pdf
 
 # Configure logging - reduce verbosity
 logging.basicConfig(level=logging.INFO, 
@@ -695,6 +700,111 @@ def quick_analyze():
     except Exception as e:
         logger.error(f"Error in quick_analyze: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/generate-overview-pdf', methods=['POST'])
+@require_auth
+def generate_overview_pdf_endpoint():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Log request for debugging
+        logger.info(f"Generating overview PDF report")
+        
+        # Generate the PDF using the utility
+        pdf_buffer = generate_overview_pdf(data)
+        
+        # Return the PDF file
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='healthvitals-overview-report.pdf'
+        )
+    except Exception as e:
+        logger.error(f"Error generating overview PDF: {str(e)}")
+        return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
+
+
+@app.route('/api/generate-details-pdf', methods=['POST'])
+@require_auth
+def generate_details_pdf_endpoint():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Log request for debugging
+        logger.info(f"Generating detailed PDF report")
+        
+        # Generate the PDF using the utility
+        pdf_buffer = generate_details_pdf(data)
+        
+        # Return the PDF file
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='healthvitals-detailed-report.pdf'
+        )
+    except Exception as e:
+        logger.error(f"Error generating detailed PDF: {str(e)}")
+        return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
+
+# New endpoints that don't require authentication for PDF generation
+@app.route('/api/public/generate-overview-pdf', methods=['POST'])
+@rate_limit
+@validate_request_data
+def generate_overview_pdf_public():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Log request for debugging
+        logger.info(f"Generating public overview PDF report")
+        
+        # Generate the PDF using the utility
+        pdf_buffer = generate_overview_pdf(data)
+        
+        # Return the PDF file
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='healthvitals-overview-report.pdf'
+        )
+    except Exception as e:
+        logger.error(f"Error generating public overview PDF: {str(e)}")
+        return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
+
+
+@app.route('/api/public/generate-details-pdf', methods=['POST'])
+@rate_limit
+@validate_request_data
+def generate_details_pdf_public():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Log request for debugging
+        logger.info(f"Generating public detailed PDF report")
+        
+        # Generate the PDF using the utility
+        pdf_buffer = generate_details_pdf(data)
+        
+        # Return the PDF file
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='healthvitals-detailed-report.pdf'
+        )
+    except Exception as e:
+        logger.error(f"Error generating public detailed PDF: {str(e)}")
+        return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

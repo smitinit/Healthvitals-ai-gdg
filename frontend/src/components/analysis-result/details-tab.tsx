@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import type { AnalysisResult, Symptom } from "@/types/symptom-types"
-import { Pill, Stethoscope, Thermometer, ActivitySquare, Utensils, Dumbbell, Heart, Shield, Check, X, FileSpreadsheet, ClipboardList, Leaf } from "lucide-react"
+import { Pill, Stethoscope, Thermometer, ActivitySquare, Utensils, Dumbbell, Heart, Shield, Check, X, FileSpreadsheet, ClipboardList, Leaf, FileDown } from "lucide-react"
 
 interface DetailsTabProps {
   result: AnalysisResult
@@ -9,6 +11,8 @@ interface DetailsTabProps {
 }
 
 export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  
   // Function to get recommended actions specific to a condition
   const getConditionActions = (conditionName: string) => {
     // Check if there are condition-specific actions in the result
@@ -73,6 +77,41 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
         )}
       </div>
     );
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true);
+      
+      // Make API request to generate PDF
+      const response = await fetch('/api/public/generate-details-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(result),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      // Download the PDF file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'healthvitals-detailed-report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF report. Please try again later.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -342,6 +381,18 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* Download Report Button */}
+      <div className="flex justify-center mt-8">
+        <Button 
+          onClick={handleDownloadPDF} 
+          disabled={isDownloading}
+          className="w-full max-w-md"
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          {isDownloading ? 'Generating PDF...' : 'Download Detailed Report'}
+        </Button>
       </div>
     </div>
   )
