@@ -4,8 +4,28 @@ import { Button } from "@/components/ui/button";
 import SymptomScanDemo from "@/components/sympto-scan";
 import { Link } from "react-router";
 import landingPageImage from "../assets/landingImage.webp";
+import { useRef } from "react";
+import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
 
 export default function Home() {
+  const symptomScanRef = useRef<HTMLDivElement>(null);
+  const { isSignedIn } = useAuth();
+
+  // Function to scroll to SymptomScan section
+  const scrollToSymptomScan = () => {
+    symptomScanRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Function to handle Try SymptomScan Now button click
+  const handleTrySymptomScanNow = () => {
+    if (!isSignedIn) {
+      // If not signed in, redirect will happen via the Link component
+      // to the symptoscan-pro route, which will then redirect to sign-in
+      return;
+    }
+    // If signed in, just navigate to symptoscan-pro via the Link component
+  };
+
   return (
     <>
       <main className="flex-grow">
@@ -29,12 +49,14 @@ export default function Home() {
                   concerns with our cutting-edge AI technology.
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Button size="lg" className="gap-2">
+                  <Button size="lg" className="gap-2" onClick={scrollToSymptomScan}>
                     Get Started <ArrowRight className="h-4 w-4" />
                   </Button>
-                  <Button size="lg" variant="outline">
-                    Learn More
-                  </Button>
+                  <Link to="/symptoscan-pro">
+                    <Button size="lg" variant="outline" className="gap-2">
+                      Try SymptomScan Pro <Stethoscope className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
 
@@ -57,7 +79,7 @@ export default function Home() {
         </section>
 
         {/* Feature Section - SymptomScan */}
-        <section className="py-20 px-4 md:px-6 lg:px-8 bg-slate-50">
+        <section ref={symptomScanRef} className="py-20 px-4 md:px-6 lg:px-8 bg-slate-50">
           <div className="container mx-auto max-w-6xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -140,8 +162,8 @@ export default function Home() {
                 </ul>
 
                 <div className="mt-8">
-                  <Link to="/origin">
-                    <Button size="lg" className="gap-2">
+                  <Link to="/symptoscan-pro">
+                    <Button size="lg" className="gap-2" onClick={handleTrySymptomScanNow}>
                       Try SymptomScan Now <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -238,7 +260,7 @@ export default function Home() {
                 health insights
               </p>
               <div className="mt-8">
-                <Button size="lg" variant="secondary" className="gap-2">
+                <Button size="lg" variant="secondary" className="gap-2" onClick={scrollToSymptomScan}>
                   Get Started Today <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>

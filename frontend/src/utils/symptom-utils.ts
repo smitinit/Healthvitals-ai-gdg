@@ -1,166 +1,109 @@
 import type { AnalysisResult, Symptom } from "@/types/symptom-types";
 
-export const generateAnalysisResult = (
-  selectedSymptoms: Symptom[]
-): AnalysisResult => {
-  // Generate analysis result based on symptoms
-  const hasRespiratorySymptoms = selectedSymptoms.some((s) =>
-    ["Cough", "Sore throat", "Runny nose", "Congestion", "Sneezing"].includes(
-      s.name
-    )
-  );
+const API_BASE_URL = 'http://localhost:5000/api';
 
-  const hasHeadacheSymptoms = selectedSymptoms.some((s) =>
-    ["Headache", "Facial pain", "Sinus pressure"].includes(s.name)
-  );
-
-  const hasDigestiveSymptoms = selectedSymptoms.some((s) =>
-    ["Nausea", "Vomiting", "Diarrhea", "Abdominal pain", "Heartburn"].includes(
-      s.name
-    )
-  );
-
-  // Create a tailored result based on the symptoms
-  const analysisResult: AnalysisResult = {
-    possibleConditions: [],
-    recommendation: "",
-    urgency: "low",
-    followUpActions: [],
-    riskFactors: [],
-  };
-
-  if (hasRespiratorySymptoms) {
-    analysisResult.possibleConditions.push(
-      {
-        name: "Common Cold",
-        probability: 75,
-        description: "A viral infection of the upper respiratory tract.",
-        category: "respiratory",
-      },
-      {
-        name: "Seasonal Allergies",
-        probability: 65,
-        description:
-          "An immune response to environmental triggers like pollen.",
-        category: "respiratory",
-      }
-    );
-
-    if (hasHeadacheSymptoms) {
-      analysisResult.possibleConditions.push({
-        name: "Sinus Infection",
-        probability: 60,
-        description: "Inflammation of the sinuses, often following a cold.",
-        category: "respiratory",
-      });
-    }
-
-    analysisResult.recommendation =
-      "Stay hydrated, rest, and consider over-the-counter cold medications. If symptoms persist for more than 7 days or worsen, consult a healthcare professional.";
-    analysisResult.followUpActions = [
-      "Monitor symptoms for 3-5 days",
-      "Take over-the-counter decongestants if needed",
-      "Use saline nasal spray for congestion",
-    ];
-    analysisResult.riskFactors = [
-      "Exposure to others with similar symptoms",
-      "Recent weather changes",
-      "Seasonal allergens",
-    ];
-  } else if (hasDigestiveSymptoms) {
-    analysisResult.possibleConditions.push(
-      {
-        name: "Gastroenteritis",
-        probability: 70,
-        description: "Inflammation of the stomach and intestines.",
-        category: "digestive",
-      },
-      {
-        name: "Acid Reflux",
-        probability: 55,
-        description: "Backward flow of stomach acid into the esophagus.",
-        category: "digestive",
-      }
-    );
-
-    analysisResult.recommendation =
-      "Stay hydrated with clear fluids, follow the BRAT diet (bananas, rice, applesauce, toast), and rest. If symptoms persist for more than 48 hours or include severe pain, consult a healthcare professional.";
-    analysisResult.urgency = "medium";
-    analysisResult.followUpActions = [
-      "Monitor hydration levels",
-      "Gradually return to normal diet as symptoms improve",
-      "Consider probiotics to restore gut flora",
-    ];
-    analysisResult.riskFactors = [
-      "Recent consumption of undercooked food",
-      "Exposure to others with similar symptoms",
-      "Recent travel",
-    ];
-  } else if (hasHeadacheSymptoms) {
-    analysisResult.possibleConditions.push(
-      {
-        name: "Tension Headache",
-        probability: 80,
-        description: "Common headache with mild to moderate pain.",
-        category: "neurological",
-      },
-      {
-        name: "Migraine",
-        probability: 45,
-        description: "Recurring headache with moderate to severe pain.",
-        category: "neurological",
-      }
-    );
-
-    analysisResult.recommendation =
-      "Rest in a quiet, dark room. Try over-the-counter pain relievers and apply a cold or warm compress to your head. If headaches are severe or recurring, consult a healthcare professional.";
-    analysisResult.followUpActions = [
-      "Track headache patterns and triggers",
-      "Consider stress reduction techniques",
-      "Ensure adequate hydration and regular meals",
-    ];
-    analysisResult.riskFactors = [
-      "Stress and anxiety",
-      "Poor sleep patterns",
-      "Screen time and eye strain",
-    ];
-  } else {
-    // Default if no specific pattern is detected
-    analysisResult.possibleConditions.push({
-      name: "General Fatigue",
-      probability: 65,
-      description: "Temporary tiredness that can be caused by various factors.",
-      category: "neurological",
+export const generateAnalysisResult = async (
+  selectedSymptoms: Symptom[],
+  age: string,
+  gender: string,
+  medicalHistory: string[],
+  dietPreference: string = "balanced",
+  currentMedications: string = "",
+  allergies: string = "",
+  recentLifeChanges: string = "",
+  symptomTriggers: string = "",
+  exerciseFrequency: string = "moderate",
+  sleepQuality: string = "fair",
+  stressLevel: string = "moderate"
+): Promise<AnalysisResult> => {
+  try {
+    console.log("Sending API request with:", {
+      symptoms: selectedSymptoms,
+      age,
+      gender,
+      medicalHistory,
+      dietPreference,
+      currentMedications,
+      allergies,
+      recentLifeChanges,
+      symptomTriggers,
+      exerciseFrequency,
+      sleepQuality,
+      stressLevel
     });
 
-    analysisResult.recommendation =
-      "Rest and monitor your symptoms. Ensure adequate hydration and nutrition. If symptoms persist or worsen, consult a healthcare professional.";
-    analysisResult.followUpActions = [
-      "Get adequate rest",
-      "Stay hydrated",
-      "Monitor for any new or worsening symptoms",
-    ];
-    analysisResult.riskFactors = [
-      "Recent stress or lifestyle changes",
-      "Inadequate sleep",
-      "Poor nutrition",
-    ];
-  }
+    const response = await fetch(`${API_BASE_URL}/analyze-symptoms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        symptoms: selectedSymptoms,
+        age,
+        gender,
+        medicalHistory,
+        dietPreference,
+        currentMedications,
+        allergies,
+        recentLifeChanges,
+        symptomTriggers,
+        exerciseFrequency,
+        sleepQuality,
+        stressLevel
+      }),
+    });
 
-  // Determine urgency based on symptom severity
-  const highSeveritySymptoms = selectedSymptoms.filter(
-    (s) => s.severity >= 8
-  ).length;
-  if (highSeveritySymptoms >= 2) {
-    analysisResult.urgency = "high";
-  } else if (
-    highSeveritySymptoms === 1 ||
-    selectedSymptoms.filter((s) => s.severity >= 6).length >= 3
-  ) {
-    analysisResult.urgency = "medium";
-  }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API response not OK:', response.status, errorText);
+      throw new Error(`Failed to analyze symptoms: ${response.status} ${response.statusText} - ${errorText}`);
+    }
 
-  return analysisResult;
+    const result = await response.json();
+    console.log("API response received:", result);
+    
+    // Ensure all required fields are present in the result
+    const defaultResult: AnalysisResult = {
+      possibleConditions: [
+        {
+          name: "Analysis Result",
+          probability: 100,
+          description: "Based on the provided symptoms.",
+          category: "general"
+        }
+      ],
+      recommendation: "Please consult a healthcare professional for a proper diagnosis.",
+      urgency: "medium",
+      followUpActions: ["Consult a healthcare professional"],
+      riskFactors: ["Self-diagnosis without professional consultation"],
+      mealRecommendations: {
+        breakfast: ["Consult a nutritionist for personalized recommendations"],
+        lunch: ["Consult a nutritionist for personalized recommendations"],
+        dinner: ["Consult a nutritionist for personalized recommendations"]
+      },
+      exercisePlan: ["Consult a healthcare professional before starting any exercise regimen"],
+      diseases: ["Analysis could not determine specific diseases"],
+      preventiveMeasures: ["Consult a healthcare professional"],
+      medicineRecommendations: ["Do not self-medicate, consult a healthcare professional"],
+      dos: ["Consult a healthcare professional"],
+      donts: ["Do not self-diagnose or self-medicate"]
+    };
+    
+    // Merge the API result with the default result to ensure all fields exist
+    const completeResult: AnalysisResult = {
+      ...defaultResult,
+      ...result,
+      mealRecommendations: {
+        ...defaultResult.mealRecommendations,
+        ...(result.mealRecommendations || {})
+      }
+    };
+    
+    return completeResult;
+  } catch (error) {
+    console.error('Error analyzing symptoms:', error);
+    throw error;
+  }
 };
 
 // Helper function to check if a symptom already exists in the array

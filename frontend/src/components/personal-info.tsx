@@ -18,6 +18,12 @@ interface PersonalInfoProps {
   setGender: (gender: string) => void;
   medicalHistory: string[];
   setMedicalHistory: (history: string[]) => void;
+  medicalHistoryText: string;
+  setMedicalHistoryText: (text: string) => void;
+  height: string;
+  setHeight: (height: string) => void;
+  weight: string;
+  setWeight: (weight: string) => void;
 }
 
 export default function PersonalInfo({
@@ -27,6 +33,12 @@ export default function PersonalInfo({
   setGender,
   medicalHistory,
   setMedicalHistory,
+  medicalHistoryText,
+  setMedicalHistoryText,
+  height,
+  setHeight,
+  weight,
+  setWeight,
 }: PersonalInfoProps) {
   return (
     <div className="space-y-6">
@@ -64,8 +76,36 @@ export default function PersonalInfo({
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label htmlFor="height" className="text-sm font-medium">
+            Height (cm)
+          </label>
+          <Input
+            id="height"
+            type="number"
+            placeholder="Enter your height in cm"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="weight" className="text-sm font-medium">
+            Weight (kg)
+          </label>
+          <Input
+            id="weight"
+            type="number"
+            placeholder="Enter your weight in kg"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
-        <label className="text-sm font-medium">Medical History</label>
+        <label className="text-sm font-medium">Common Medical Conditions</label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {medicalHistoryOptions.map((condition) => (
             <div
@@ -96,6 +136,22 @@ export default function PersonalInfo({
             </div>
           ))}
         </div>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="medicalHistoryText" className="text-sm font-medium">
+          Additional Medical History
+        </label>
+        <Textarea
+          id="medicalHistoryText"
+          placeholder="Describe any other medical conditions, past surgeries, hospitalizations, or relevant health information in your own words..."
+          className="min-h-[120px]"
+          value={medicalHistoryText}
+          onChange={(e) => setMedicalHistoryText(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          This information helps provide a more accurate analysis of your symptoms.
+        </p>
       </div>
 
       <div className="space-y-2">

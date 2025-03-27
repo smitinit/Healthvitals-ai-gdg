@@ -1,13 +1,14 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info } from "lucide-react";
+import { Info, HeartPulse, Circle } from "lucide-react";
 import type { AnalysisResult, Symptom } from "@/types/symptom-types";
 import OverviewTab from "./overview-tab";
 import DetailsTab from "./details-tab";
 import DoctorsTab from "./doctors-tab";
 import ResourcesTab from "./resources-tab";
 import { useState } from "react";
+import CircleProgress from "@/components/circle-progress";
 
 interface AnalysisResultProps {
   result: AnalysisResult;
@@ -57,6 +58,55 @@ export default function AnalysisResultComponent({
           </span>
         </p>
       </div>
+
+      {/* Health Score */}
+      {result.healthScore !== undefined && (
+        <div className="mt-6 p-4 border rounded-lg">
+          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            <HeartPulse className="h-5 w-5 text-primary" />
+            Health Score
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="relative h-16 w-16 flex items-center justify-center">
+              <Circle className="h-16 w-16 absolute text-muted-foreground/20" strokeWidth={1} />
+              <CircleProgress 
+                value={result.healthScore} 
+                max={10}
+                className="h-16 w-16 absolute text-primary" 
+                strokeWidth={4}
+              />
+              <span className="text-2xl font-bold relative z-10">
+                {result.healthScore}
+              </span>
+            </div>
+            <div className="flex-1">
+              <span className="text-sm font-medium">
+                {result.healthScore >= 8 
+                  ? "Your health score is very good!" 
+                  : result.healthScore >= 6 
+                  ? "Your health score is good, with some areas for improvement." 
+                  : result.healthScore >= 4 
+                  ? "Your health score indicates medical attention may be needed." 
+                  : "Your health score suggests urgent medical attention is recommended."}
+              </span>
+              <div className="w-full bg-muted mt-2 h-2 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full ${
+                    result.healthScore >= 8 
+                      ? "bg-green-500" 
+                      : result.healthScore >= 6 
+                      ? "bg-yellow-500" 
+                      : result.healthScore >= 4 
+                      ? "bg-orange-500" 
+                      : "bg-red-500"
+                  }`}
+                  style={{ width: `${(result.healthScore / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

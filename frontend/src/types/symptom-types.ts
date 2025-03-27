@@ -11,18 +11,53 @@ export type BodyArea = {
   symptoms: string[];
 };
 
-export type AnalysisResult = {
+export interface AnalysisResult {
   possibleConditions: {
     name: string;
     probability: number;
     description: string;
-    category: "respiratory" | "digestive" | "neurological";
+    category: "respiratory" | "digestive" | "neurological" | "general";
   }[];
   recommendation: string;
   urgency: "low" | "medium" | "high";
   followUpActions: string[];
   riskFactors: string[];
-};
+  mealRecommendations: {
+    breakfast: string[];
+    lunch: string[];
+    dinner: string[];
+    note?: string;
+  };
+  exercisePlan: string[];
+  diseases: string[];
+  preventiveMeasures: string[];
+  medicineRecommendations: string[];
+  ayurvedicMedication?: {
+    recommendations: Array<{
+      name: string;
+      description: string;
+      importance: string;
+      benefits: string;
+    }>;
+  };
+  dos: string[];
+  donts: string[];
+  conditionSpecificData?: {
+    [conditionName: string]: {
+      recommendedActions?: string[];
+      preventiveMeasures?: string[];
+    }
+  };
+  reportsRequired?: {
+    name: string;
+    purpose?: string;
+    benefits?: string;
+    analysisDetails?: string;
+    preparationRequired?: string;
+    recommendationReason: string;
+  }[];
+  healthScore?: number;
+}
 
 export type MedicalCondition = {
   name: string;

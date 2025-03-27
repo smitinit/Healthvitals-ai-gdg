@@ -26,7 +26,10 @@ import {
   Loader2,
   FileText,
   Stethoscope,
+  Activity,
 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router";
+import { useAuth } from "@clerk/clerk-react";
 import type { Symptom, AnalysisResult } from "@/types/symptom-types";
 import { bodyAreas } from "@/data/symptom-data";
 import { generateAnalysisResult } from "@/utils/symptom-utils";
@@ -37,7 +40,7 @@ import AnalysisResultComponent from "@/components/analysis-result/analysis-resul
 import LoadingAnalysis from "@/components/loading-analysis";
 import ConfettiEffect from "@/components/confetti-effect";
 
-export default function SymptomScanEnhanced() {
+export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean }) {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -45,8 +48,39 @@ export default function SymptomScanEnhanced() {
   const [age, setAge] = useState<string>("");
   const [gender, setGender] = useState<string>("");
   const [medicalHistory, setMedicalHistory] = useState<string[]>([]);
+  const [medicalHistoryText, setMedicalHistoryText] = useState<string>("");
+  const [height, setHeight] = useState<string>("");
+  const [weight, setWeight] = useState<string>("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [hasUsedQuickAnalysis, setHasUsedQuickAnalysis] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isSignedIn, getToken } = useAuth();
+
+  // Additional information states
+  const [exerciseFrequency, setExerciseFrequency] = useState<string>("moderate");
+  const [sleepQuality, setSleepQuality] = useState<string>("fair");
+  const [stressLevel, setStressLevel] = useState<string>("moderate");
+  const [dietPreference, setDietPreference] = useState<string>("balanced");
+  const [recentLifeChanges, setRecentLifeChanges] = useState<string>("");
+
+  // Use localStorage to track if anonymous user has used the quick analysis
+  useEffect(() => {
+    // Only check if this is the regular symptoscan and user is not signed in
+    if (!isPro && !isSignedIn) {
+      const hasUsedBefore = localStorage.getItem('hasUsedSymptomScan') === 'true';
+      setHasUsedQuickAnalysis(hasUsedBefore);
+    }
+  }, [isPro, isSignedIn]);
+
+  // Check if user needs to be redirected to sign in
+  useEffect(() => {
+    if (!isPro && !isSignedIn && hasUsedQuickAnalysis) {
+      // If anonymous user has already used quick analysis, redirect to sign in
+      navigate('/symptoscan-pro');
+    }
+  }, [isPro, isSignedIn, hasUsedQuickAnalysis, navigate]);
 
   // Update progress based on current step
   useEffect(() => {
@@ -59,25 +93,135 @@ export default function SymptomScanEnhanced() {
     setProgress(progressMap[step] || 0);
   }, [step]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Check if this is quick-analyze path or symptoscan-pro path
+  const isQuickAnalyze = !isPro;
+
+  // Submit handler for the form
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsLoading(true);
-
-    // Simulate API call with progress
-    let loadingProgress = 0;
-    const interval = setInterval(() => {
-      loadingProgress += 5;
-      if (loadingProgress >= 100) {
-        clearInterval(interval);
-
-        // Generate analysis result based on symptoms
-        const analysisResult = generateAnalysisResult(selectedSymptoms);
-        setResult(analysisResult);
-        setIsLoading(false);
-        setStep(4);
-        setShowConfetti(true);
+    setResult(null);
+    
+    console.log("Form submitted with symptoms:", selectedSymptoms);
+    if (selectedSymptoms.length === 0) {
+      alert("Please select at least one symptom");
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!age) {
+      alert("Please enter your age");
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      // Determine if this is a quick analysis or full analysis
+      const isQuickAnalysis = !isPro || step !== 3;
+      
+      console.log("Starting symptom analysis...");
+      console.log("Using Pro Mode:", isPro);
+      console.log("Current step:", step);
+      console.log("isQuickAnalysis determined to be:", isQuickAnalysis);
+      
+      // Log which endpoint we're using
+      console.log("Using endpoint:", isQuickAnalysis ? "/api/quick-analyze" : "/api/analyze-symptoms");
+      
+      // Prepare request body
+      let requestBody: any = {};
+      
+      if (isQuickAnalysis) {
+        // Quick analysis just needs symptoms and age
+        const symptomString = selectedSymptoms.map(s => s.name).join(", ");
+        console.log("Quick analysis request:", { symptoms: symptomString, age });
+        console.log("Selected symptoms:", selectedSymptoms);
+        requestBody = { symptoms: symptomString, age };
+      } else {
+        // Full analysis needs all the details
+        console.log("Full analysis request - using full symptom objects");
+        console.log("Selected symptoms:", selectedSymptoms);
+        
+        requestBody = {
+          symptoms: selectedSymptoms, // Send the full symptom objects with severity and duration
+          age,
+          gender,
+          height,
+          weight,
+          medicalHistory,
+          medicalHistoryText, // Add the free-text medical history
+          exerciseFrequency,
+          sleepQuality,
+          stressLevel,
+          dietPreference,
+          recentLifeChanges
+        };
       }
-    }, 50);
+      
+      // Make API request
+      const endpoint = isQuickAnalysis ? 
+        "/api/quick-analyze" : 
+        "/api/analyze-symptoms";
+      console.log("Sending request to:", endpoint);
+      
+      // Get the token if user is signed in
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      
+      if (isSignedIn) {
+        try {
+          const token = await getToken();
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+            console.log("Added authorization token to request");
+          } else {
+            console.error("No token available despite user being signed in");
+            throw new Error("Authentication token not available");
+          }
+        } catch (error) {
+          console.error("Error getting token:", error);
+          throw new Error("Failed to get authentication token");
+        }
+      } else {
+        console.error("User must be signed in to use this feature");
+        throw new Error("Authentication required");
+      }
+      
+      console.log("Request payload:", JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+      
+      console.log("Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API error response:", errorText);
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Analysis response:", data);
+      
+      // If this is a quick analysis and user is not signed in, mark as used
+      if (isQuickAnalysis && !isSignedIn) {
+        localStorage.setItem('hasUsedSymptomScan', 'true');
+        setHasUsedQuickAnalysis(true);
+      }
+      
+      setResult(data);
+      
+      // Move to the results step
+      setStep(4);
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      alert(`Failed to analyze symptoms. Please try again. ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetDemo = () => {
@@ -86,21 +230,41 @@ export default function SymptomScanEnhanced() {
     setAge("");
     setGender("");
     setMedicalHistory([]);
+    setMedicalHistoryText("");
+    setHeight("");
+    setWeight("");
+    setExerciseFrequency("moderate");
+    setSleepQuality("fair");
+    setStressLevel("moderate");
+    setDietPreference("balanced");
+    setRecentLifeChanges("");
     setResult(null);
     setShowConfetti(false);
   };
 
   const handleNextStep = () => {
+    // Log the current step for debugging
+    console.log("Moving from step", step, "to", step + 1);
     if (step < 4) {
       setStep(step + 1);
     }
   };
 
   const handlePrevStep = () => {
+    // Log the current step for debugging
+    console.log("Moving from step", step, "to", step - 1);
     if (step > 1) {
       setStep(step - 1);
     }
   };
+
+  // This ensures the result and loading state synchronize with step 4
+  useEffect(() => {
+    if (step === 4 && !isLoading && !result) {
+      // If we're on step 4 but have no result and aren't loading, go back to step 3
+      setStep(3);
+    }
+  }, [step, isLoading, result]);
 
   return (
     <Card className="w-full shadow-lg border-primary/10 mt-0 pt-0">
@@ -108,11 +272,22 @@ export default function SymptomScanEnhanced() {
         <div className="flex items-center justify-between pt-6 ">
           <div>
             <CardTitle className="text-primary flex items-center gap-2 text-2xl ">
-              <Stethoscope className="h-6 w-6 " />
-              SymptomScan Pro
+              {isPro ? (
+                <>
+                  <Stethoscope className="h-6 w-6 text-primary" />
+                  SymptomScan Pro
+                </>
+              ) : (
+                <>
+                  <Activity className="h-6 w-6 text-primary" />
+                  SymptomScan
+                </>
+              )}
             </CardTitle>
             <CardDescription>
-              Advanced symptom analysis with personalized insights
+              {isPro
+                ? "Our comprehensive AI-powered health analysis tool. Get detailed insights and personalized recommendations."
+                : "Quick AI-powered symptom checker. Get a basic assessment of your symptoms in seconds."}
             </CardDescription>
           </div>
           <TooltipProvider>
@@ -175,6 +350,12 @@ export default function SymptomScanEnhanced() {
                   setGender={setGender}
                   medicalHistory={medicalHistory}
                   setMedicalHistory={setMedicalHistory}
+                  medicalHistoryText={medicalHistoryText}
+                  setMedicalHistoryText={setMedicalHistoryText}
+                  height={height}
+                  setHeight={setHeight}
+                  weight={weight}
+                  setWeight={setWeight}
                 />
               </>
             )}
@@ -184,7 +365,18 @@ export default function SymptomScanEnhanced() {
                 <h2 className="text-xl font-semibold mb-4">
                   Additional Information
                 </h2>
-                <AdditionalInfo />
+                <AdditionalInfo 
+                  exerciseFrequency={exerciseFrequency}
+                  setExerciseFrequency={setExerciseFrequency}
+                  sleepQuality={sleepQuality}
+                  setSleepQuality={setSleepQuality}
+                  stressLevel={stressLevel}
+                  setStressLevel={setStressLevel}
+                  dietPreference={dietPreference}
+                  setDietPreference={setDietPreference}
+                  recentLifeChanges={recentLifeChanges}
+                  setRecentLifeChanges={setRecentLifeChanges}
+                />
               </>
             )}
 
@@ -232,7 +424,10 @@ export default function SymptomScanEnhanced() {
               </Button>
             ) : (
               <Button
-                onClick={handleSubmit}
+                onClick={(e) => {
+                  console.log("Analyze Symptoms button clicked");
+                  handleSubmit(e);
+                }}
                 disabled={isLoading}
                 className="gap-2"
               >

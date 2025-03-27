@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home as HomeIcon, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/clerk-react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,9 +26,9 @@ export default function Navbar() {
           <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold">HV</span>
           </div>
-          <span className="text-xl font-bold text-primary">
+          <Link to="/" className="text-xl font-bold text-primary">
             HealthVitals AI
-          </span>
+          </Link>
         </motion.div>
 
         {/* Desktop Navigation */}
@@ -32,18 +39,12 @@ export default function Navbar() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="flex items-center gap-6"
           >
-            <Link to="/" className="text-sm font-medium hover:text-primary">
-              Home
-            </Link>
-            <Link to="/" className="text-sm font-medium hover:text-primary">
-              Features
-            </Link>
-            <Link to="/" className="text-sm font-medium hover:text-primary">
-              About
-            </Link>
-            <Link to="/" className="text-sm font-medium hover:text-primary">
-              Contact
-            </Link>
+            <NavLink to="/" className={({isActive}) => `text-sm font-medium flex items-center gap-1 ${isActive ? "text-primary" : "hover:text-primary"}`}>
+              <HomeIcon className="h-4 w-4" /> Home
+            </NavLink>
+            <NavLink to="/symptoscan-pro" className={({isActive}) => `text-sm font-medium flex items-center gap-1 ${isActive ? "text-primary" : "hover:text-primary"}`}>
+              <Stethoscope className="h-4 w-4" /> SymptomScan Pro
+            </NavLink>
           </motion.div>
 
           <motion.div
@@ -52,10 +53,16 @@ export default function Navbar() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex items-center gap-2"
           >
-            <Button variant="outline" size="sm">
-              Sign In
-            </Button>
-            <Button size="sm">Get Started</Button>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="outline" className="text-primary px-4 py-2">
+                  Sign In
+                </Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
           </motion.div>
         </nav>
 
@@ -83,39 +90,31 @@ export default function Navbar() {
           className="md:hidden border-t"
         >
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            <Link
+            <NavLink
               to="/"
-              className="py-2 text-sm font-medium hover:text-primary"
+              className={({isActive}) => `py-2 text-sm font-medium flex items-center gap-1 ${isActive ? "text-primary" : "hover:text-primary"}`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Home
-            </Link>
-            <Link
-              to="/"
-              className="py-2 text-sm font-medium hover:text-primary"
+              <HomeIcon className="h-4 w-4" /> Home
+            </NavLink>
+            <NavLink
+              to="/symptoscan-pro"
+              className={({isActive}) => `py-2 text-sm font-medium flex items-center gap-1 ${isActive ? "text-primary" : "hover:text-primary"}`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Features
-            </Link>
-            <Link
-              to="/"
-              className="py-2 text-sm font-medium hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              to="/"
-              className="py-2 text-sm font-medium hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </Link>
+              <Stethoscope className="h-4 w-4" /> SymptomScan Pro
+            </NavLink>
             <div className="flex flex-col gap-2 pt-2 border-t">
-              <Button variant="outline" className="w-full justify-center">
-                Sign In
-              </Button>
-              <Button className="w-full justify-center">Get Started</Button>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="outline" className="w-full justify-center">
+                    Sign In
+                  </Button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
             </div>
           </div>
         </motion.div>

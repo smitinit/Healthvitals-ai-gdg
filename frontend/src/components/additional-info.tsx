@@ -6,8 +6,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ChangeEvent } from "react";
 
-export default function AdditionalInfo() {
+type AdditionalInfoProps = {
+  exerciseFrequency: string;
+  setExerciseFrequency: (value: string) => void;
+  sleepQuality: string;
+  setSleepQuality: (value: string) => void;
+  stressLevel: string;
+  setStressLevel: (value: string) => void;
+  dietPreference: string;
+  setDietPreference: (value: string) => void;
+  recentLifeChanges: string;
+  setRecentLifeChanges: (value: string) => void;
+}
+
+export default function AdditionalInfo({
+  exerciseFrequency,
+  setExerciseFrequency,
+  sleepQuality,
+  setSleepQuality,
+  stressLevel,
+  setStressLevel,
+  dietPreference,
+  setDietPreference,
+  recentLifeChanges,
+  setRecentLifeChanges,
+}: AdditionalInfoProps) {
+  const handleStressLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Map the stress level from 1-10 to low/moderate/high
+    if (parseInt(value) <= 3) {
+      setStressLevel("low");
+    } else if (parseInt(value) <= 7) {
+      setStressLevel("moderate");
+    } else {
+      setStressLevel("high");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -17,7 +54,7 @@ export default function AdditionalInfo() {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <p className="text-sm">Exercise Frequency</p>
-            <Select defaultValue="moderate">
+            <Select value={exerciseFrequency} onValueChange={setExerciseFrequency}>
               <SelectTrigger>
                 <SelectValue placeholder="Select frequency" />
               </SelectTrigger>
@@ -35,7 +72,7 @@ export default function AdditionalInfo() {
           </div>
           <div className="space-y-2">
             <p className="text-sm">Sleep Quality</p>
-            <Select defaultValue="fair">
+            <Select value={sleepQuality} onValueChange={setSleepQuality}>
               <SelectTrigger>
                 <SelectValue placeholder="Select quality" />
               </SelectTrigger>
@@ -63,6 +100,8 @@ export default function AdditionalInfo() {
             max="10"
             defaultValue="5"
             className="w-full"
+            onChange={handleStressLevelChange}
+            aria-label="Stress Level"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Low</span>
@@ -76,7 +115,7 @@ export default function AdditionalInfo() {
         <label htmlFor="diet" className="text-sm font-medium">
           Diet
         </label>
-        <Select defaultValue="balanced">
+        <Select value={dietPreference} onValueChange={setDietPreference}>
           <SelectTrigger id="diet">
             <SelectValue placeholder="Select diet type" />
           </SelectTrigger>
@@ -99,17 +138,8 @@ export default function AdditionalInfo() {
           id="recent-changes"
           placeholder="Describe any recent changes in your life that might be relevant (e.g., travel, new job, moved homes)..."
           className="min-h-[100px]"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="symptom-triggers" className="text-sm font-medium">
-          Symptom Triggers
-        </label>
-        <Textarea
-          id="symptom-triggers"
-          placeholder="Describe anything that seems to trigger or worsen your symptoms..."
-          className="min-h-[100px]"
+          value={recentLifeChanges}
+          onChange={(e) => setRecentLifeChanges(e.target.value)}
         />
       </div>
     </div>
