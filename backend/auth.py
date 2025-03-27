@@ -1,17 +1,14 @@
+import base64
+import logging
 import os
 from functools import wraps
-from flask import request, jsonify
-try:
-    from jose import jwt
-    from jose.exceptions import JWTError
-except ImportError:
-    # Fallback to PyJWT if python-jose is not available
-    import jwt
-    from jwt import PyJWTError as JWTError
+
 import requests
-import logging
+from flask import jsonify, request
+from jose import jwt
+from jose.exceptions import JWTError
+
 from clerk_backend_api import Clerk
-import base64
 
 # Initialize logging
 logger = logging.getLogger(__name__)
