@@ -7,6 +7,7 @@ import OverviewTab from "./overview-tab";
 import DetailsTab from "./details-tab";
 import DoctorsTab from "./doctors-tab";
 import ResourcesTab from "./resources-tab";
+import ReportAnalysisTab from "./report-analysis-tab";
 import { useState } from "react";
 import CircleProgress from "@/components/circle-progress";
 
@@ -24,9 +25,10 @@ export default function AnalysisResultComponent({
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 mb-4">
+        <TabsList className="grid grid-cols-5 mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="report-analysis">Report Analysis</TabsTrigger>
           <TabsTrigger value="doctors">Find Care</TabsTrigger>
           <TabsTrigger value="resources">Resources</TabsTrigger>
         </TabsList>
@@ -37,6 +39,10 @@ export default function AnalysisResultComponent({
 
         <TabsContent value="details">
           <DetailsTab result={result} selectedSymptoms={selectedSymptoms} />
+        </TabsContent>
+
+        <TabsContent value="report-analysis">
+          <ReportAnalysisTab result={result} selectedSymptoms={selectedSymptoms} />
         </TabsContent>
 
         <TabsContent value="doctors">

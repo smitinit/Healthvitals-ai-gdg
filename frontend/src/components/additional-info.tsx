@@ -19,6 +19,10 @@ type AdditionalInfoProps = {
   setDietPreference: (value: string) => void;
   recentLifeChanges: string;
   setRecentLifeChanges: (value: string) => void;
+  allergies: string;
+  setAllergies: (value: string) => void;
+  currentMedications: string;
+  setCurrentMedications: (value: string) => void;
 }
 
 export default function AdditionalInfo({
@@ -32,6 +36,10 @@ export default function AdditionalInfo({
   setDietPreference,
   recentLifeChanges,
   setRecentLifeChanges,
+  allergies,
+  setAllergies,
+  currentMedications,
+  setCurrentMedications,
 }: AdditionalInfoProps) {
   const handleStressLevelChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -128,6 +136,32 @@ export default function AdditionalInfo({
             <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="allergies" className="text-sm font-medium">
+          Allergies
+        </label>
+        <Textarea
+          id="allergies"
+          placeholder="List any allergies you have (medications, food, environmental, etc.)..."
+          className="min-h-[80px]"
+          value={allergies}
+          onChange={(e) => setAllergies(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="current-medications" className="text-sm font-medium">
+          Current Medications
+        </label>
+        <Textarea
+          id="current-medications"
+          placeholder="List any medications you are currently taking..."
+          className="min-h-[80px]"
+          value={currentMedications}
+          onChange={(e) => setCurrentMedications(e.target.value)}
+        />
       </div>
 
       <div className="space-y-2">

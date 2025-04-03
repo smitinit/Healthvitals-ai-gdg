@@ -16,6 +16,10 @@ import socket
 import traceback
 from collections import defaultdict, Counter
 from pdf_generator import generate_overview_pdf, generate_details_pdf
+import tempfile
+import shutil
+from werkzeug.utils import secure_filename
+from datetime import datetime
 
 # Configure logging - reduce verbosity
 logging.basicConfig(level=logging.INFO, 
@@ -89,15 +93,15 @@ CORS(app,
 setup_logging()
 
 # Setup Google Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
+api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    logging.error("GOOGLE_API_KEY not found in environment variables")
-    print("WARNING: GOOGLE_API_KEY not found in environment variables")
+    logging.error("GEMINI_API_KEY not found in environment variables")
+    print("WARNING: GEMINI_API_KEY not found in environment variables")
     # Try to manually read from .env file as a fallback
     try:
         with open(".env", "r") as f:
             for line in f:
-                if line.startswith("GOOGLE_API_KEY="):
+                if line.startswith("GEMINI_API_KEY="):
                     api_key = line.strip().split("=", 1)[1].strip()
                     print(f"Manually loaded API key from .env file: {api_key[:5]}...")
                     break
@@ -114,6 +118,14 @@ safety_settings = [
     {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
 ]
+
+# Configure generation settings for Gemini API
+generation_config = {
+    "temperature": 0.4,
+    "top_p": 0.95,
+    "top_k": 40,
+    "max_output_tokens": 4096,
+}
 
 # Track anonymous quick analysis usage by IP
 anonymous_quick_analysis_tracker = {}
@@ -185,7 +197,7 @@ def analyze_symptoms():
             return jsonify({"error": validation_result['message']}), 400
 
         if not api_key:
-            logger.error("Cannot process request: GOOGLE_API_KEY not configured")
+            logger.error("Cannot process request: GEMINI_API_KEY not configured")
             return jsonify({
                 "error": "API key not configured",
                 "recommendation": "Please check server configuration"
@@ -253,8 +265,6 @@ def analyze_symptoms():
         3. [Specific action for this condition]
         4. [Specific action for this condition]
         5. [Specific action for this condition]
-        6. [Optional additional action]
-        7. [Optional additional action]
         
         [CONDITION_NAME] PREVENTIVE MEASURES:
         1. [Specific preventive measure for this condition]
@@ -262,8 +272,6 @@ def analyze_symptoms():
         3. [Specific preventive measure for this condition]
         4. [Specific preventive measure for this condition]
         5. [Specific preventive measure for this condition]
-        6. [Optional additional preventive measure]
-        7. [Optional additional preventive measure]
         
         Example structure:
         1. Migraine (Probability: 75%): A neurological condition...
@@ -287,11 +295,11 @@ def analyze_symptoms():
         Specify urgency as 'low', 'medium', or 'high' - one word only.
         
         FOLLOW-UP ACTIONS:
-        List 5-7 recommended next steps, each on a new line with a number.
+        List 3-5 recommended next steps, each on a new line with a number.
         Include specific advice related to the patient's lifestyle factors, medical history (both structured and text-based), allergies, recent life changes and current medications, and symptoms, height, weight, age, gender, where applicable.
         
         RISK FACTORS:
-        List 5-7 potential risk factors based on the symptoms and lifestyle factors, and medical history (both structured and text-based), and allergies, and recent life changes and current medications, and symptoms, height, weight, age, gender, each on a new line with a number.
+        List 3-5 potential risk factors based on the symptoms and lifestyle factors, and medical history (both structured and text-based), and allergies, and recent life changes and current medications, and symptoms, height, weight, age, gender, each on a new line with a number.
         
         INDIAN MEAL RECOMMENDATIONS:
         Suggest specific Indian meals based on the patient's diet preference ({diet_preference}), and medical history ({formatted_medical_history}), and lifestyle factors ({exercise_frequency}), and allergies ({allergies}), and recent life changes ({recent_life_changes}) and current medications ({current_medications}), and symptoms ({formatted_symptoms}) with severity and additional medical history ({medical_history_text}), and height ({height}), and weight ({weight}), and age ({age}), each on a new line with a number.
@@ -310,11 +318,7 @@ def analyze_symptoms():
         List 3-5 potential diseases associated with these symptoms, each on a new line with a number.
         
         PREVENTIVE MEASURES:
-        List 5-7 preventive measures, especially focusing on improving sleep quality ({sleep_quality}) and managing stress levels ({stress_level}), and diet preference ({diet_preference}), and medical history ({formatted_medical_history}), and lifestyle factors ({exercise_frequency}), and allergies ({allergies}), and recent life changes ({recent_life_changes}) and current medications ({current_medications}), and symptoms ({formatted_symptoms}) with severity and height ({height}), and weight ({weight}), and age ({age}), each on a new line with a number.
-        
-        MEDICINE RECOMMENDATIONS:
-        List 3-5 over-the-counter medicines (with disclaimer to consult doctor), each on a new line with a number.
-        Consider any current medications the patient is taking to avoid interactions.
+        List 3-5 preventive measures, especially focusing on improving sleep quality ({sleep_quality}) and managing stress levels ({stress_level}), and diet preference ({diet_preference}), and medical history ({formatted_medical_history}), and lifestyle factors ({exercise_frequency}), and allergies ({allergies}), and recent life changes ({recent_life_changes}) and current medications ({current_medications}), and symptoms ({formatted_symptoms}) with severity and height ({height}), and weight ({weight}), and age ({age}), each on a new line with a number.
         
         AYURVEDIC MEDICATION:
         Provide 5 specific Ayurvedic recommendations structured as follows (include exactly 5 recommendations, each with all requested details):
@@ -377,7 +381,7 @@ def analyze_symptoms():
         - Each subsection must contain multiple detailed bullet points (not just a single paragraph)
         
         HEALTH SCORE:
-        Provide a numerical health score from 1-10 (where 10 is perfectly healthy) based on the symptoms, lifestyle factors, and medical history provided (both structured and text-based). Include a brief one-sentence explanation for this score.
+        Provide a numerical health score from 1-10 (where 10 is perfectly healthy) based on the symptoms, lifestyle factors, and medical history provided (both structured and text-based) and all other information provided by the patient. Include a brief one-sentence explanation for this score.
         Format: [Score]/10 - [Brief explanation]
         
         IMPORTANT FORMATTING RULES:
@@ -443,7 +447,6 @@ def analyze_symptoms():
                     "exercisePlan": [],
                     "diseases": [],
                     "preventiveMeasures": ["Consider using the offline symptom checker as an alternative"],
-                    "medicineRecommendations": ["Consult a healthcare professional before taking any medication"],
                     "ayurvedicMedication": {
                         "recommendations": [
                             {
@@ -475,7 +478,6 @@ def analyze_symptoms():
                 "exercisePlan": [],
                 "diseases": [],
                 "preventiveMeasures": ["Consult a healthcare professional"],
-                "medicineRecommendations": ["Consult a healthcare professional before taking any medication"],
                 "ayurvedicMedication": {
                     "recommendations": [
                         {
@@ -531,7 +533,7 @@ def quick_analyze():
             return jsonify({"error": "Please provide symptoms"}), 400
 
         if not api_key:
-            logger.error("Cannot process request: GOOGLE_API_KEY not configured")
+            logger.error("Cannot process request: GEMINI_API_KEY not configured")
             return jsonify({
                 "error": "API key not configured",
                 "recommendation": "Please check server configuration"
@@ -805,6 +807,641 @@ def generate_details_pdf_public():
     except Exception as e:
         logger.error(f"Error generating public detailed PDF: {str(e)}")
         return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
+
+@app.route('/api/analyze-reports', methods=['POST'])
+@rate_limit
+def analyze_reports():
+    try:
+        logger.info("Starting report analysis...")
+        
+        # Check if files were uploaded
+        if 'reports' not in request.files:
+            logger.error("No files found in the request")
+            return jsonify({"error": "No files uploaded"}), 400
+        
+        # Get all uploaded files
+        files = request.files.getlist('reports')
+        
+        if not files or len(files) == 0:
+            logger.error("Empty file list received")
+            return jsonify({"error": "No files uploaded"}), 400
+        
+        logger.info(f"Received {len(files)} files: {', '.join([f.filename for f in files if f.filename])}")
+        
+        # Get the analysis result and symptoms for context
+        try:
+            analysis_result = json.loads(request.form.get('analysisResult', '{}'))
+            selected_symptoms = json.loads(request.form.get('selectedSymptoms', '[]'))
+            logger.info(f"Successfully parsed analysis_result and selected_symptoms from request")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from request: {str(e)}")
+            return jsonify({"error": "Invalid JSON data in request"}), 400
+        
+        logger.info(f"Analyzing {len(files)} medical reports")
+        
+        # Create a temporary directory to store uploaded files
+        temp_dir = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+        os.makedirs(temp_dir, exist_ok=True)
+        logger.info(f"Created temporary directory: {temp_dir}")
+        
+        try:
+            # Process and save each file
+            file_paths = []
+            for file in files:
+                if file.filename:
+                    try:
+                        # Create a secure filename
+                        filename = secure_filename(file.filename)
+                        filepath = os.path.join(temp_dir, filename)
+                        file.save(filepath)
+                        file_size = os.path.getsize(filepath) / 1024  # KB
+                        logger.info(f"Saved file: {filename} ({file_size:.1f} KB)")
+                        file_paths.append(filepath)
+                    except Exception as file_err:
+                        logger.error(f"Error saving file {file.filename}: {str(file_err)}")
+            
+            if not file_paths:
+                logger.error("No files were successfully saved")
+                return jsonify({"error": "Failed to process uploaded files"}), 400
+            
+            logger.info(f"Successfully saved {len(file_paths)} files, generating prompt...")
+            
+            # Analyze the medical reports using Gemini API
+            prompt = create_report_analysis_prompt(file_paths, analysis_result, selected_symptoms)
+            logger.info("Generated prompt for Gemini API, sending request...")
+            
+            report_analysis = analyze_medical_reports_with_gemini(prompt)
+            logger.info("Successfully received and parsed response from Gemini API")
+            
+            # Clean up temporary files
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            os.rmdir(temp_dir)
+            logger.info("Cleaned up temporary files")
+            
+            return jsonify(report_analysis)
+        except Exception as e:
+            logger.error(f"Error during report analysis: {str(e)}")
+            logger.error(f"Exception traceback: {traceback.format_exc()}")
+            # Ensure cleanup in case of errors
+            if os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)
+                    logger.info("Cleaned up temporary directory after error")
+                except Exception as cleanup_err:
+                    logger.error(f"Error cleaning up temp dir: {str(cleanup_err)}")
+            raise e
+    except Exception as e:
+        logger.error(f"Error analyzing reports: {str(e)}")
+        logger.error(f"Exception traceback: {traceback.format_exc()}")
+        return jsonify({"error": f"Failed to analyze reports: {str(e)}"}), 500
+
+
+# Helper function to create a prompt for the Gemini API based on reports and context
+def create_report_analysis_prompt(file_paths, analysis_result, selected_symptoms):
+    # Extract comprehensive user information
+    age = analysis_result.get('age', 'Not provided')
+    gender = analysis_result.get('gender', 'Not provided')
+    height = analysis_result.get('height', 'Not provided')
+    weight = analysis_result.get('weight', 'Not provided')
+    medical_history = analysis_result.get('medicalHistory', [])
+    medical_history_text = analysis_result.get('medicalHistoryText', '')
+    
+    # Lifestyle factors
+    exercise_frequency = analysis_result.get('exerciseFrequency', 'Not provided')
+    sleep_quality = analysis_result.get('sleepQuality', 'Not provided')
+    stress_level = analysis_result.get('stressLevel', 'Not provided')
+    diet_preference = analysis_result.get('dietPreference', 'Not provided')
+    allergies = analysis_result.get('allergies', 'Not provided')
+    current_medications = analysis_result.get('currentMedications', 'Not provided')
+    recent_life_changes = analysis_result.get('recentLifeChanges', 'Not provided')
+    
+    # Format patient profile
+    patient_profile = f"""
+    Patient Profile:
+    - Age: {age}
+    - Gender: {gender}
+    - Height: {height}
+    - Weight: {weight}
+    - Exercise Frequency: {exercise_frequency}
+    - Sleep Quality: {sleep_quality}
+    - Stress Level: {stress_level}
+    - Diet Preference: {diet_preference}
+    - Allergies: {allergies}
+    - Current Medications: {current_medications}
+    - Recent Life Changes: {recent_life_changes}
+    """
+    
+    # Format medical history
+    medical_history_formatted = "Medical History:\n"
+    if medical_history:
+        medical_history_formatted += "\n".join([f"- {condition}" for condition in medical_history])
+    elif medical_history_text:
+        medical_history_formatted += medical_history_text
+    else:
+        medical_history_formatted += "None reported"
+    
+    # Format symptoms
+    symptoms_text = "Symptoms reported by patient:\n"
+    for symptom in selected_symptoms:
+        symptoms_text += f"- {symptom['name']} (Severity: {symptom['severity']}/10, Duration: {symptom['duration']})\n"
+    
+    # Format initial analysis
+    conditions_text = "Initial analysis suggested these conditions:\n"
+    for condition in analysis_result.get('possibleConditions', []):
+        conditions_text += f"- {condition['name']} ({condition['probability']}% probability): {condition.get('description', '')}\n"
+    
+    recommendations_text = "Initial recommendations:\n" + analysis_result.get('recommendation', 'None provided')
+    
+    # Count file types for better guidance to the model
+    image_count = 0
+    pdf_count = 0
+    doc_count = 0
+    
+    # Format uploaded files info
+    files_info = "Uploaded medical reports summary:\n"
+    for path in file_paths:
+        file_name = os.path.basename(path)
+        file_extension = os.path.splitext(file_name)[1].lower()
+        file_size = os.path.getsize(path) / 1024  # Convert to KB
+        
+        file_type = "Unknown"
+        if file_extension in ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp']:
+            file_type = "Medical Image/X-Ray"
+            image_count += 1
+        elif file_extension == '.pdf':
+            file_type = "Medical Report PDF"
+            pdf_count += 1
+        elif file_extension in ['.doc', '.docx', '.txt', '.rtf']:
+            file_type = "Medical Document"
+            doc_count += 1
+        
+        files_info += f"- {file_name} ({file_type}, {file_size:.1f} KB)\n"
+    
+    # Image-specific guidance for models
+    image_guidance = ""
+    if image_count > 0:
+        image_guidance = """
+        IMPORTANT GUIDANCE FOR IMAGE ANALYSIS:
+        
+        For the medical images provided (X-rays, scans, CBC reports, etc.):
+        1. If you see lab reports like CBC, blood tests, metabolic panels:
+           - Identify the type of test (CBC, lipid panel, etc.)
+           - Look for values outside normal ranges and highlight them
+           - Identify patterns like anemia, infection, inflammation based on values
+           - Connect abnormal values to patient's symptoms
+           
+        2. If you see X-rays or radiological images:
+           - Describe visible structures and any abnormalities
+           - Note any structural issues, opacities, or concerning features
+           - Explain how these findings might relate to symptoms
+           
+        3. For prescription images:
+           - Note all medications prescribed
+           - Identify dosage and frequency where visible
+           - Explain the purpose of these medications
+           - Flag any potential interactions with current medications
+           
+        4. For any medical report images:
+           - Look for doctor's notes or summary sections
+           - Extract key medical terms, diagnoses, or recommendations
+           - Note dates of tests/treatments for timeline context
+        """
+    
+    # Extract text from PDF files if possible
+    pdf_text = ""
+    try:
+        import fitz  # PyMuPDF
+        logger.info("PyMuPDF successfully imported, processing PDF files...")
+        
+        for path in file_paths:
+            if path.lower().endswith('.pdf'):
+                try:
+                    logger.info(f"Processing PDF file: {os.path.basename(path)}")
+                    doc = fitz.open(path)
+                    page_count = doc.page_count
+                    logger.info(f"PDF has {page_count} pages")
+                    
+                    # Process all pages up to a maximum of 5
+                    for page_num in range(min(5, page_count)):
+                        try:
+                            page = doc[page_num]
+                            page_text = page.get_text().strip()
+                            text_length = min(1500, len(page_text))  # Increased text length limit further
+                            
+                            pdf_text += f"\nContent from {os.path.basename(path)} (page {page_num+1}):\n"
+                            pdf_text += page_text[:text_length]
+                            if text_length < len(page_text):
+                                pdf_text += "\n... (truncated)"
+                            
+                            logger.info(f"Extracted {text_length} characters from page {page_num+1}")
+                        except Exception as page_err:
+                            logger.error(f"Error extracting text from page {page_num+1}: {str(page_err)}")
+                    
+                    doc.close()
+                except Exception as e:
+                    logger.error(f"Failed to extract text from PDF {path}: {str(e)}")
+                    logger.error(traceback.format_exc())
+    except ImportError:
+        logger.warning("PyMuPDF not installed, skipping PDF text extraction")
+        pdf_text = "PDF text extraction is not available. Please install PyMuPDF package."
+    except Exception as e:
+        logger.error(f"Unexpected error during PDF extraction: {str(e)}")
+        logger.error(traceback.format_exc())
+    
+    # Create specialized prompt based on uploaded file types
+    file_type_guidance = ""
+    if image_count > 0 and pdf_count == 0:
+        file_type_guidance = "The user has only uploaded image files. Please provide analysis based on these medical images without text extraction. Look for visual patterns in lab reports, X-rays, or medical documents."
+    elif image_count == 0 and pdf_count > 0:
+        file_type_guidance = "The user has uploaded PDF documents. Please focus on analyzing the extracted text from these medical reports."
+    elif image_count > 0 and pdf_count > 0:
+        file_type_guidance = "The user has uploaded both images and PDF documents. Please provide a comprehensive analysis combining information from both types of files."
+    
+    # Final prompt
+    prompt = f"""
+    You are a medical assistant tasked with analyzing medical reports, X-rays, and doctor prescriptions.
+    
+    {patient_profile}
+    
+    {medical_history_formatted}
+    
+    {symptoms_text}
+    
+    {conditions_text}
+    
+    {recommendations_text}
+    
+    Uploaded files information:
+    {files_info}
+    
+    {file_type_guidance}
+    
+    {image_guidance}
+    
+    {pdf_text if pdf_text else "No text could be extracted from the uploaded files. Please focus on analyzing any medical images provided based on their content type."}
+    
+    Based on all the provided information, including the patient's profile, symptoms, medical history, and uploaded reports, provide a comprehensive analysis with:
+
+    1. Recommendation: Clear medical recommendations based on reports and symptoms
+    2. Follow-up Actions: Specific actions the patient should take 
+    3. Risk Factors: Identified risks based on all information
+    4. Meal Recommendations: Specific dietary suggestions for breakfast, lunch, dinner
+    5. Exercise Plan: Tailored physical activity recommendations
+    6. Preventive Measures: Proactive steps to prevent condition deterioration
+    7. Do's & Don'ts: Clear lifestyle guidelines
+    8. Ayurvedic Medication: Any relevant traditional medicinal approaches
+    9. Possible Conditions: Updated assessment of potential conditions with probability percentages
+    10. Health Score: A score from 1-10 reflecting overall health status
+    11. Key Findings from Reports: Specific insights from the uploaded documents
+    12. Summary: A comprehensive overview of the analysis
+    
+    IMPORTANT GUIDELINES FOR KEY FINDINGS:
+    - For lab reports (CBC, blood tests, etc.): Identify abnormal values and their significance
+    - For X-rays or scans: Note visible features or abnormalities
+    - For reports without extractable text: Use your image analysis capabilities to identify test types, values, and insights
+    - Connect findings directly to patient symptoms and conditions
+    - For CBC reports specifically: Look for abnormalities in blood cell counts, hemoglobin levels, etc.
+    - If you can't extract specific values, note the presence of the test and explain its general purpose in relation to symptoms
+
+    Format the response as JSON with the following structure:
+    {{
+        "recommendation": "Primary medical advice",
+        "followUpActions": ["action1", "action2"],
+        "riskFactors": ["risk1", "risk2"],
+        "mealRecommendations": {{
+            "breakfast": ["meal1", "meal2"],
+            "lunch": ["meal1", "meal2"],
+            "dinner": ["meal1", "meal2"],
+            "note": "Additional dietary guidance"
+        }},
+        "exercisePlan": ["exercise1", "exercise2"],
+        "preventiveMeasures": ["measure1", "measure2"],
+        "dos": ["do1", "do2"],
+        "donts": ["dont1", "dont2"],
+        "ayurvedicMedication": {{
+            "recommendations": [
+                {{
+                    "name": "Medication name",
+                    "description": "What it is",
+                    "importance": "Why it's recommended",
+                    "benefits": "Expected benefits"
+                }}
+            ]
+        }},
+        "possibleConditions": [
+            {{
+                "name": "Condition name",
+                "probability": 75,
+                "description": "Brief description",
+                "category": "respiratory/digestive/neurological/general"
+            }}
+        ],
+        "healthScore": 7,
+        "keyFindings": ["finding1", "finding2"],
+        "summary": "Comprehensive analysis paragraph"
+    }}
+    
+    Ensure your analysis is medically sound and takes into account both the initial symptoms analysis and the additional information from the uploaded medical documents. If you cannot extract specific values from images, provide general insights based on the type of medical document (CBC report, X-ray, etc.) and how it relates to the patient's symptoms.
+    """
+    
+    logger.info("Created prompt for Gemini API with all patient information and enhanced image/PDF guidance")
+    return prompt
+
+
+# Function to analyze medical reports using Gemini API
+def analyze_medical_reports_with_gemini(prompt):
+    try:
+        if not api_key:
+            logger.error("Cannot process request: GEMINI_API_KEY not configured")
+            return {"error": "API key not configured"}
+        
+        genai.configure(api_key=api_key)
+        
+        # Log that we're about to call the API
+        logger.info("Configured Gemini API with API key")
+        
+        # Create model with more specific parameters
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-pro",
+            generation_config={
+                "temperature": 0.3,  # Lower temperature for more deterministic results
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 8192,  # Increased max tokens for more detailed analysis
+            },
+            safety_settings=safety_settings
+        )
+        
+        logger.info("Sending request to Gemini API...")
+        start_time = time.time()
+        
+        # Add timeout and retry logic
+        max_retries = 2
+        retry_count = 0
+        
+        while retry_count <= max_retries:
+            try:
+                response = model.generate_content(prompt, stream=False)
+                break  # If successful, break out of the retry loop
+            except Exception as e:
+                retry_count += 1
+                logger.warning(f"Gemini API request failed (attempt {retry_count}/{max_retries}): {str(e)}")
+                if retry_count > max_retries:
+                    raise  # Re-raise the exception if we've exhausted retries
+                time.sleep(2)  # Wait before retrying
+        
+        elapsed_time = time.time() - start_time
+        logger.info(f"Received response from Gemini API in {elapsed_time:.2f} seconds")
+        
+        try:
+            # Check if response contains text
+            if not hasattr(response, 'text') or not response.text:
+                logger.error("Received empty response from Gemini API")
+                return create_fallback_response("The AI model returned an empty response. Please try again.")
+            
+            response_text = response.text
+            logger.info(f"Response text length: {len(response_text)} characters")
+            
+            # Try to parse as JSON
+            try:
+                # First, attempt to extract JSON if wrapped in markdown code blocks
+                json_match = re.search(r'```json\s*([\s\S]*?)\s*```', response_text)
+                if json_match:
+                    logger.info("Found JSON in markdown code block")
+                    json_str = json_match.group(1)
+                    report_analysis = json.loads(json_str)
+                else:
+                    # Try direct JSON parsing
+                    report_analysis = json.loads(response_text)
+                
+                logger.info("Successfully parsed JSON response")
+                
+            except json.JSONDecodeError as json_err:
+                logger.error(f"Failed to parse JSON response: {str(json_err)}")
+                logger.error(f"Response text (first 500 chars): {response_text[:500]}...")
+                
+                # Try to extract structured data from non-JSON text
+                logger.info("Attempting to extract structured data from non-JSON response")
+                report_analysis = extract_structured_data_from_text(response_text)
+            
+            # Add default values for any missing fields
+            report_analysis = ensure_complete_response(report_analysis)
+            logger.info("Completed response structure with default values where needed")
+            
+            return report_analysis
+            
+        except Exception as parsing_err:
+            logger.error(f"Error processing Gemini API response: {str(parsing_err)}")
+            logger.error(traceback.format_exc())
+            return create_fallback_response(f"Error processing AI response: {str(parsing_err)}")
+            
+    except Exception as e:
+        logger.error(f"Error calling Gemini API: {str(e)}")
+        logger.error(traceback.format_exc())
+        return create_fallback_response(f"Error calling AI service: {str(e)}")
+
+# Helper function to create a fallback response
+def create_fallback_response(error_message):
+    logger.info(f"Creating fallback response with error: {error_message}")
+    return {
+        "recommendation": f"We encountered an issue analyzing your reports. {error_message} Please consult with a healthcare provider for proper medical advice.",
+        "followUpActions": [
+            "Consult with a healthcare provider to review your medical reports",
+            "Try uploading different report formats (PDF recommended) or clearer images",
+            "Consider providing additional context about your symptoms and reports",
+            "Schedule a follow-up appointment to discuss your test results in detail"
+        ],
+        "riskFactors": [
+            "Unable to determine specific risk factors from the provided reports",
+            "Delayed diagnosis or treatment due to incomplete analysis",
+            "Potential oversight of important medical findings"
+        ],
+        "mealRecommendations": {
+            "breakfast": ["Balanced meal with protein, whole grains, and fruits"],
+            "lunch": ["Varied diet with vegetables, lean protein, and complex carbohydrates"],
+            "dinner": ["Light meal with vegetables, protein, and minimal carbohydrates"],
+            "note": "These are general recommendations. Please consult a nutritionist for personalized advice based on your specific test results."
+        },
+        "exercisePlan": [
+            "Regular moderate physical activity appropriate for your condition",
+            "Consult with a healthcare provider before starting any exercise regimen",
+            "Consider activities that don't exacerbate your symptoms"
+        ],
+        "preventiveMeasures": [
+            "Regular health check-ups with comprehensive blood work",
+            "Follow your doctor's advice regarding diagnostic tests",
+            "Keep a record of all your symptoms and test results",
+            "Maintain a healthy lifestyle with balanced nutrition"
+        ],
+        "dos": [
+            "Maintain a healthy lifestyle with balanced nutrition and regular exercise",
+            "Keep all your medical reports organized and accessible",
+            "Continue taking prescribed medications as directed by your doctor",
+            "Follow up with healthcare providers for proper interpretation of test results"
+        ],
+        "donts": [
+            "Avoid self-medication based on incomplete analysis",
+            "Don't ignore persistent symptoms even if analysis was inconclusive",
+            "Avoid delaying professional medical consultation",
+            "Don't rely solely on automated analysis for medical decisions"
+        ],
+        "ayurvedicMedication": {"recommendations": []},
+        "possibleConditions": [],
+        "healthScore": 5,
+        "keyFindings": [
+            "Your report appears to contain medical data that requires professional interpretation",
+            "The system identified the presence of medical reports but couldn't extract specific values",
+            "For blood test/CBC reports: These typically measure blood cell counts, hemoglobin levels, and other important markers",
+            "For imaging reports: These may contain important structural or functional information relevant to your symptoms",
+            "Professional medical review is recommended to fully interpret these results in context with your symptoms"
+        ],
+        "summary": "We encountered technical difficulties analyzing your specific medical reports. While the system has identified the types of reports you've uploaded, a healthcare professional should review these documents for accurate interpretation. The reports you've provided contain valuable medical information that, when properly analyzed, can help guide your diagnosis and treatment. Please consult with a qualified healthcare provider who can interpret your test results in the context of your medical history and current symptoms."
+    }
+
+# Helper function to ensure response has all required fields
+def ensure_complete_response(analysis):
+    # Define default values for all fields
+    defaults = {
+        "recommendation": "Please consult with a healthcare provider for a proper medical recommendation.",
+        "followUpActions": ["Consult with a healthcare provider"],
+        "riskFactors": ["No specific risk factors identified"],
+        "mealRecommendations": {
+            "breakfast": ["Balanced meal with protein, whole grains, and fruits"],
+            "lunch": ["Varied diet with vegetables, lean protein, and complex carbohydrates"],
+            "dinner": ["Light meal with vegetables, protein, and minimal carbohydrates"],
+            "note": "These are general recommendations. Please consult a nutritionist for personalized advice."
+        },
+        "exercisePlan": ["Moderate physical activity as appropriate"],
+        "preventiveMeasures": ["Regular health check-ups"],
+        "dos": ["Maintain a healthy lifestyle"],
+        "donts": ["Avoid self-medication"],
+        "ayurvedicMedication": {"recommendations": []},
+        "possibleConditions": [],
+        "healthScore": 5,
+        "keyFindings": ["Analysis completed based on provided information"],
+        "summary": "The uploaded reports were analyzed in context with your symptoms. Please consult a healthcare provider for accurate interpretation."
+    }
+    
+    # Ensure all keys exist
+    for key, default_value in defaults.items():
+        if key not in analysis:
+            analysis[key] = default_value
+        elif analysis[key] is None:
+            analysis[key] = default_value
+    
+    # Handle nested mealRecommendations structure
+    if "mealRecommendations" in analysis:
+        if not isinstance(analysis["mealRecommendations"], dict):
+            analysis["mealRecommendations"] = defaults["mealRecommendations"]
+        else:
+            for meal_key in ["breakfast", "lunch", "dinner", "note"]:
+                if meal_key not in analysis["mealRecommendations"] or not analysis["mealRecommendations"][meal_key]:
+                    if meal_key in defaults["mealRecommendations"]:
+                        analysis["mealRecommendations"][meal_key] = defaults["mealRecommendations"][meal_key]
+    
+    # Ensure ayurvedicMedication has correct structure
+    if "ayurvedicMedication" in analysis:
+        if not isinstance(analysis["ayurvedicMedication"], dict) or "recommendations" not in analysis["ayurvedicMedication"]:
+            analysis["ayurvedicMedication"] = {"recommendations": []}
+    
+    return analysis
+
+# Helper function to extract structured data from non-JSON text
+def extract_structured_data_from_text(text):
+    # Initialize the result structure
+    result = {}
+    
+    # Try to extract recommendation
+    recommendation_match = re.search(r'(?:Recommendation|RECOMMENDATION)[:\s]+(.*?)(?:\n\n|\n[A-Z]|$)', text, re.DOTALL | re.IGNORECASE)
+    if recommendation_match:
+        result["recommendation"] = recommendation_match.group(1).strip()
+    
+    # Try to extract health score - look for numbers 1-10
+    health_score_match = re.search(r'(?:Health Score|HEALTH SCORE)[:\s]+(\d+(?:\.\d+)?)', text, re.IGNORECASE)
+    if health_score_match:
+        try:
+            score = float(health_score_match.group(1))
+            # Ensure score is between 1-10
+            score = max(1, min(10, score))
+            result["healthScore"] = score
+        except ValueError:
+            pass
+    
+    # Try to extract key findings
+    findings_section = re.search(r'(?:Key Findings|KEY FINDINGS)(?:from Reports)?[:\s]+(.*?)(?:\n\n|\n[A-Z]|$)', text, re.DOTALL | re.IGNORECASE)
+    if findings_section:
+        findings_text = findings_section.group(1).strip()
+        # Split by bullet points, numbers, or new lines
+        findings = re.split(r'(?:\n|•|\*|\d+\.)\s*', findings_text)
+        findings = [f.strip() for f in findings if f.strip()]
+        if findings:
+            result["keyFindings"] = findings
+    
+    # If no key findings extracted using the pattern above, try broader extraction
+    if "keyFindings" not in result or not result["keyFindings"]:
+        # Look for CBC or blood test related content
+        cbc_section = re.search(r'(?:CBC|Blood Test|Laboratory|Lab Results?|Hematology|Blood Count)[^\n]*(?:\n|.)+?(?=\n\n|\n[A-Z]|$)', text, re.DOTALL | re.IGNORECASE)
+        if cbc_section:
+            cbc_text = cbc_section.group(0).strip()
+            # Extract key points from this section
+            lines = [line.strip() for line in cbc_text.split('\n') if line.strip()]
+            # Filter out lines that are just headers
+            findings = [line for line in lines if len(line) > 10 and not re.match(r'^[A-Z\s]+:$', line)]
+            if findings:
+                result["keyFindings"] = findings[:5]  # Limit to 5 findings
+    
+    # If still no findings, check for any mentions of test results
+    if "keyFindings" not in result or not result["keyFindings"]:
+        test_matches = re.findall(r'(?:indicated|showed|revealed|found|identified|detected|present(?:s|ed)?|observed)[^\n.]+(?:\n|.)+?(?=\n\n|\n[A-Z]|$)', text, re.DOTALL | re.IGNORECASE)
+        if test_matches:
+            findings = []
+            for match in test_matches[:3]:  # Limit to 3 matches
+                clean_match = re.sub(r'\s+', ' ', match.strip())
+                if len(clean_match) > 10:
+                    findings.append(clean_match)
+            if findings:
+                result["keyFindings"] = findings
+    
+    # If still no findings, provide a generic finding about the report type
+    if "keyFindings" not in result or not result["keyFindings"]:
+        # Check if there's any mention of CBC, blood test, or other common tests
+        if re.search(r'CBC|blood test|x-ray|MRI|scan|laboratory|hematology', text, re.IGNORECASE):
+            result["keyFindings"] = [
+                "Medical report identified but specific values could not be extracted",
+                "The report appears to contain medical test results relevant to the patient's condition",
+                "Further professional interpretation of the medical images is recommended"
+            ]
+    
+    # Try to extract summary
+    summary_match = re.search(r'(?:Summary|SUMMARY)[:\s]+(.*?)(?:\n\n|$)', text, re.DOTALL | re.IGNORECASE)
+    if summary_match:
+        result["summary"] = summary_match.group(1).strip()
+    
+    # Try to extract follow-up actions
+    followup_section = re.search(r'(?:Follow-up Actions?|FOLLOW-UP ACTIONS?)[:\s]+(.*?)(?:\n\n|\n[A-Z]|$)', text, re.DOTALL | re.IGNORECASE)
+    if followup_section:
+        followup_text = followup_section.group(1).strip()
+        # Split by numbers or new lines
+        actions = re.split(r'(?:\n|•|\*|\d+\.)\s*', followup_text)
+        actions = [a.strip() for a in actions if a.strip()]
+        if actions:
+            result["followUpActions"] = actions
+    
+    # Try to extract risk factors
+    risk_section = re.search(r'(?:Risk Factors?|RISK FACTORS?)[:\s]+(.*?)(?:\n\n|\n[A-Z]|$)', text, re.DOTALL | re.IGNORECASE)
+    if risk_section:
+        risk_text = risk_section.group(1).strip()
+        # Split by numbers or new lines
+        risks = re.split(r'(?:\n|•|\*|\d+\.)\s*', risk_text)
+        risks = [r.strip() for r in risks if r.strip()]
+        if risks:
+            result["riskFactors"] = risks
+    
+    # Return what we could extract, default values will be added later
+    logger.info(f"Extracted {len(result)} fields from non-JSON response")
+    return result
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

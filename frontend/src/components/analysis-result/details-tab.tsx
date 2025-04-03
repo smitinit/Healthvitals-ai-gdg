@@ -19,7 +19,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
     if (result.conditionSpecificData && 
         result.conditionSpecificData[conditionName] && 
         result.conditionSpecificData[conditionName].recommendedActions) {
-      return result.conditionSpecificData[conditionName].recommendedActions;
+      return result.conditionSpecificData[conditionName].recommendedActions.slice(0, 3);
     }
     
     // Fall back to general actions if no condition-specific actions found
@@ -32,7 +32,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
     if (result.conditionSpecificData && 
         result.conditionSpecificData[conditionName] && 
         result.conditionSpecificData[conditionName].preventiveMeasures) {
-      return result.conditionSpecificData[conditionName].preventiveMeasures;
+      return result.conditionSpecificData[conditionName].preventiveMeasures.slice(0, 3);
     }
     
     // Fall back to general preventive measures if no condition-specific measures found
@@ -46,7 +46,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
         <div>
           <h4 className="font-medium text-lg mb-2">Breakfast</h4>
           <ul className="list-disc pl-5 space-y-1">
-            {result.mealRecommendations.breakfast.map((meal, index) => (
+            {result.mealRecommendations.breakfast.slice(0, 3).map((meal, index) => (
               <li key={index} className="text-gray-700">{meal}</li>
             ))}
           </ul>
@@ -55,7 +55,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
         <div>
           <h4 className="font-medium text-lg mb-2">Lunch</h4>
           <ul className="list-disc pl-5 space-y-1">
-            {result.mealRecommendations.lunch.map((meal, index) => (
+            {result.mealRecommendations.lunch.slice(0, 3).map((meal, index) => (
               <li key={index} className="text-gray-700">{meal}</li>
             ))}
           </ul>
@@ -64,7 +64,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
         <div>
           <h4 className="font-medium text-lg mb-2">Dinner</h4>
           <ul className="list-disc pl-5 space-y-1">
-            {result.mealRecommendations.dinner.map((meal, index) => (
+            {result.mealRecommendations.dinner.slice(0, 3).map((meal, index) => (
               <li key={index} className="text-gray-700">{meal}</li>
             ))}
           </ul>
@@ -117,7 +117,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        {result.possibleConditions.map((condition, index) => (
+        {result.possibleConditions.slice(0, 3).map((condition, index) => (
           <Accordion key={index} type="single" collapsible className="border rounded-lg">
             <AccordionItem value={`condition-${index}`} className="border-none">
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -181,50 +181,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
         ))}
       </div>
 
-      <div className="p-4 border rounded-lg mb-4">
-        <h3 className="font-medium mb-3">Your Symptom Details</h3>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {selectedSymptoms.map((symptom) => (
-              <div key={symptom.id} className="p-3 border rounded-md bg-muted/10">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm">{symptom.name}</span>
-                  <Badge
-                    variant="outline"
-                    className={`${
-                      symptom.severity >= 8
-                        ? "text-red-600"
-                        : symptom.severity >= 5
-                          ? "text-yellow-600"
-                          : "text-green-600"
-                    }`}
-                  >
-                    {symptom.severity}/10
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">Duration: {symptom.duration}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <div className="space-y-4">
-        <div className="p-4 border rounded-lg">
-          <h3 className="font-medium mb-3 flex items-center">
-            <Heart className="h-4 w-4 text-primary mr-2" />
-            Possible Diseases
-          </h3>
-          <ul className="space-y-2">
-            {result.diseases.map((disease, i) => (
-              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                <span>{disease}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
         <div className="p-4 border rounded-lg">
           <h3 className="font-medium mb-3 flex items-center">
             <Utensils className="h-4 w-4 text-primary mr-2" />
@@ -239,7 +196,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
             Exercise Plan
           </h3>
           <ul className="space-y-2">
-            {result.exercisePlan.map((exercise, i) => (
+            {result.exercisePlan.slice(0, 3).map((exercise, i) => (
               <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                 <span>{exercise}</span>
@@ -256,7 +213,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
               Ayurvedic Medication
             </h3>
             <div className="space-y-6">
-              {result.ayurvedicMedication.recommendations.map((recommendation, index) => (
+              {result.ayurvedicMedication.recommendations.slice(0, 3).map((recommendation, index) => (
                 <Accordion key={index} type="single" collapsible className="border rounded-lg">
                   <AccordionItem value={`ayurvedic-${index}`} className="border-none">
                     <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -298,7 +255,7 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
               Reports Required
             </h3>
             <div className="space-y-4">
-              {result.reportsRequired.map((report, i) => (
+              {result.reportsRequired.slice(0, 3).map((report, i) => (
                 <Accordion key={i} type="single" collapsible className="border rounded-lg">
                   <AccordionItem value={`report-${i}`} className="border-none">
                     <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -349,38 +306,6 @@ export default function DetailsTab({ result, selectedSymptoms }: DetailsTabProps
             </div>
           </div>
         )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-medium mb-3 flex items-center">
-              <Check className="h-4 w-4 text-green-500 mr-2" />
-              Do's
-            </h3>
-            <ul className="space-y-2">
-              {result.dos.map((doItem, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>{doItem}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-medium mb-3 flex items-center">
-              <X className="h-4 w-4 text-red-500 mr-2" />
-              Don'ts
-            </h3>
-            <ul className="space-y-2">
-              {result.donts.map((dontItem, i) => (
-                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <X className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                  <span>{dontItem}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
       </div>
 
       {/* Download Report Button */}

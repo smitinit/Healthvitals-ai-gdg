@@ -31,7 +31,6 @@ export interface AnalysisResult {
   exercisePlan: string[];
   diseases: string[];
   preventiveMeasures: string[];
-  medicineRecommendations: string[];
   ayurvedicMedication?: {
     recommendations: Array<{
       name: string;
@@ -57,6 +56,21 @@ export interface AnalysisResult {
     recommendationReason: string;
   }[];
   healthScore?: number;
+  
+  // User information fields
+  age?: string;
+  gender?: string;
+  height?: string;
+  weight?: string;
+  medicalHistory?: string[];
+  medicalHistoryText?: string;
+  exerciseFrequency?: string;
+  sleepQuality?: string;
+  stressLevel?: string;
+  dietPreference?: string;
+  allergies?: string;
+  currentMedications?: string;
+  recentLifeChanges?: string;
 }
 
 export type MedicalCondition = {

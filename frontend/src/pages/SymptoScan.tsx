@@ -64,6 +64,8 @@ export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean
   const [stressLevel, setStressLevel] = useState<string>("moderate");
   const [dietPreference, setDietPreference] = useState<string>("balanced");
   const [recentLifeChanges, setRecentLifeChanges] = useState<string>("");
+  const [allergies, setAllergies] = useState<string>("");
+  const [currentMedications, setCurrentMedications] = useState<string>("");
 
   // Use localStorage to track if anonymous user has used the quick analysis
   useEffect(() => {
@@ -153,7 +155,9 @@ export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean
           sleepQuality,
           stressLevel,
           dietPreference,
-          recentLifeChanges
+          recentLifeChanges,
+          allergies,
+          currentMedications
         };
       }
       
@@ -214,7 +218,25 @@ export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean
         setHasUsedQuickAnalysis(true);
       }
       
-      setResult(data);
+      // Add user information to the result
+      const enrichedResult = {
+        ...data,
+        age,
+        gender,
+        height,
+        weight,
+        medicalHistory,
+        medicalHistoryText,
+        exerciseFrequency,
+        sleepQuality,
+        stressLevel,
+        dietPreference,
+        recentLifeChanges,
+        allergies,
+        currentMedications
+      };
+      
+      setResult(enrichedResult);
       
       // Move to the results step
       setStep(4);
@@ -240,6 +262,8 @@ export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean
     setStressLevel("moderate");
     setDietPreference("balanced");
     setRecentLifeChanges("");
+    setAllergies("");
+    setCurrentMedications("");
     setResult(null);
     setShowConfetti(false);
   };
@@ -378,6 +402,10 @@ export default function SymptomScanEnhanced({ isPro = false }: { isPro?: boolean
                   setDietPreference={setDietPreference}
                   recentLifeChanges={recentLifeChanges}
                   setRecentLifeChanges={setRecentLifeChanges}
+                  allergies={allergies}
+                  setAllergies={setAllergies}
+                  currentMedications={currentMedications}
+                  setCurrentMedications={setCurrentMedications}
                 />
               </>
             )}
