@@ -320,10 +320,6 @@ def analyze_symptoms():
         PREVENTIVE MEASURES:
         List 3-5 preventive measures, especially focusing on improving sleep quality ({sleep_quality}) and managing stress levels ({stress_level}), and diet preference ({diet_preference}), and medical history ({formatted_medical_history}), and lifestyle factors ({exercise_frequency}), and allergies ({allergies}), and recent life changes ({recent_life_changes}) and current medications ({current_medications}), and symptoms ({formatted_symptoms}) with severity and height ({height}), and weight ({weight}), and age ({age}), each on a new line with a number.
         
-        MEDICINE RECOMMENDATIONS:
-        List 3-5 over-the-counter medicines (with disclaimer to consult doctor), each on a new line with a number.
-        Consider any current medications the patient is taking to avoid interactions.
-        
         AYURVEDIC MEDICATION:
         Provide 5 specific Ayurvedic recommendations structured as follows (include exactly 5 recommendations, each with all requested details):
         
@@ -451,7 +447,6 @@ def analyze_symptoms():
                     "exercisePlan": [],
                     "diseases": [],
                     "preventiveMeasures": ["Consider using the offline symptom checker as an alternative"],
-                    "medicineRecommendations": ["Consult a healthcare professional before taking any medication"],
                     "ayurvedicMedication": {
                         "recommendations": [
                             {
@@ -483,7 +478,6 @@ def analyze_symptoms():
                 "exercisePlan": [],
                 "diseases": [],
                 "preventiveMeasures": ["Consult a healthcare professional"],
-                "medicineRecommendations": ["Consult a healthcare professional before taking any medication"],
                 "ayurvedicMedication": {
                     "recommendations": [
                         {

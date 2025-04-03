@@ -1,0 +1,79 @@
+2025-04-03 17:21:03,969 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:21:06,086 - __main__ - INFO - Generating enhanced analysis for user with 1 symptoms
+2025-04-03 17:21:06,089 - __main__ - ERROR - Error calling Gemini API: cannot access local variable 'genai' where it is not associated with a value
+2025-04-03 17:21:06,092 - __main__ - ERROR - Traceback (most recent call last):
+  File "C:\Users\Harshil\HealthVitals-AI\Healthvitals-ai-gdg\backend\app.py", line 1795, in public_analyze_enhanced
+    gemini = genai.GenerativeModel('gemini-pro')
+             ^^^^^
+UnboundLocalError: cannot access local variable 'genai' where it is not associated with a value
+
+2025-04-03 17:21:06,092 - __main__ - INFO - Creating fallback enhanced analysis response
+2025-04-03 17:21:06,094 - __main__ - INFO - Successfully created fallback enhanced analysis response
+2025-04-03 17:21:06,095 - __main__ - INFO - POST /api/public/analyze-enhanced - Status: 200
+2025-04-03 17:22:29,932 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:22:57,289 - __main__ - INFO - POST /api/analyze-symptoms - Processing request
+2025-04-03 17:22:57,292 - __main__ - INFO - Analyzing 1 symptoms with lifestyle factors
+2025-04-03 17:22:57,294 - __main__ - INFO - Calling Gemini API for analysis
+2025-04-03 17:23:56,968 - __main__ - INFO - Received Gemini API response and processing results
+2025-04-03 17:23:56,972 - root - INFO - Parsing Gemini response
+2025-04-03 17:23:56,977 - root - INFO - Found conditions section with 3661 characters
+2025-04-03 17:23:56,979 - root - INFO - Found 55 condition blocks
+2025-04-03 17:23:56,982 - root - INFO - Extracted condition: Asthma Exacerbation (60%)
+2025-04-03 17:23:56,987 - root - INFO - Found 5 recommended actions for Asthma Exacerbation
+2025-04-03 17:23:56,989 - root - INFO - Found 5 preventive measures for Asthma Exacerbation
+2025-04-03 17:23:56,994 - root - INFO - Extracted condition: Pneumonia (20%)
+2025-04-03 17:23:56,997 - root - INFO - Found 5 recommended actions for Pneumonia
+2025-04-03 17:23:57,003 - root - INFO - Found 38 preventive measures for Pneumonia
+2025-04-03 17:23:57,009 - root - INFO - Extracted condition: Anxiety/Panic Attack (10%)
+2025-04-03 17:23:57,012 - root - INFO - Found 5 recommended actions for Anxiety/Panic Attack
+2025-04-03 17:23:57,016 - root - INFO - Found 27 preventive measures for Anxiety/Panic Attack
+2025-04-03 17:23:57,021 - root - INFO - Extracted condition: Cancer Recurrence/Metastasis (5%)
+2025-04-03 17:23:57,025 - root - INFO - Found 5 recommended actions for Cancer Recurrence/Metastasis
+2025-04-03 17:23:57,028 - root - INFO - Found 16 preventive measures for Cancer Recurrence/Metastasis
+2025-04-03 17:23:57,034 - root - INFO - Extracted condition: Pulmonary Embolism (5%)
+2025-04-03 17:23:57,037 - root - INFO - Found 5 recommended actions for Pulmonary Embolism
+2025-04-03 17:23:57,040 - root - INFO - Found 5 preventive measures for Pulmonary Embolism
+2025-04-03 17:23:57,071 - root - INFO - Successfully parsed response with 5 conditions
+2025-04-03 17:23:57,072 - __main__ - INFO - Analysis complete - Found 5 conditions with urgency: medium
+2025-04-03 17:23:57,074 - __main__ - INFO - POST /api/analyze-symptoms - Status: 200
+2025-04-03 17:25:04,978 - __main__ - INFO - OPTIONS /api/analyze-enhanced - Status: 200
+2025-04-03 17:25:05,244 - __main__ - INFO - POST /api/analyze-enhanced - Status: 401
+2025-04-03 17:56:34,293 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:56:40,813 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:56:52,738 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:57:02,328 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:57:11,539 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 17:58:58,316 - __main__ - INFO - POST /api/analyze-symptoms - Processing request
+2025-04-03 17:58:58,318 - __main__ - INFO - Analyzing 1 symptoms with lifestyle factors
+2025-04-03 17:58:58,319 - __main__ - INFO - Calling Gemini API for analysis
+2025-04-03 17:59:54,001 - __main__ - INFO - Received Gemini API response and processing results
+2025-04-03 17:59:54,003 - root - INFO - Parsing Gemini response
+2025-04-03 17:59:54,007 - root - INFO - Found conditions section with 3168 characters
+2025-04-03 17:59:54,008 - root - INFO - Found 55 condition blocks
+2025-04-03 17:59:54,010 - root - INFO - Extracted condition: Tension Headache (60%)
+2025-04-03 17:59:54,011 - root - INFO - Found 5 recommended actions for Tension Headache
+2025-04-03 17:59:54,013 - root - INFO - Found 5 preventive measures for Tension Headache
+2025-04-03 17:59:54,016 - root - INFO - Extracted condition: Migraine (20%)
+2025-04-03 17:59:54,018 - root - INFO - Found 5 recommended actions for Migraine
+2025-04-03 17:59:54,019 - root - INFO - Found 38 preventive measures for Migraine
+2025-04-03 17:59:54,022 - root - INFO - Extracted condition: Sinus Headache (10%)
+2025-04-03 17:59:54,024 - root - INFO - Found 5 recommended actions for Sinus Headache
+2025-04-03 17:59:54,025 - root - INFO - Found 27 preventive measures for Sinus Headache
+2025-04-03 17:59:54,027 - root - INFO - Extracted condition: Cluster Headache (5%)
+2025-04-03 17:59:54,029 - root - INFO - Found 5 recommended actions for Cluster Headache
+2025-04-03 17:59:54,031 - root - INFO - Found 16 preventive measures for Cluster Headache
+2025-04-03 17:59:54,033 - root - INFO - Extracted condition: Dehydration Headache (5%)
+2025-04-03 17:59:54,034 - root - INFO - Found 5 recommended actions for Dehydration Headache
+2025-04-03 17:59:54,035 - root - INFO - Found 5 preventive measures for Dehydration Headache
+2025-04-03 17:59:54,050 - root - INFO - Successfully parsed response with 5 conditions
+2025-04-03 17:59:54,051 - __main__ - INFO - Analysis complete - Found 5 conditions with urgency: low
+2025-04-03 17:59:54,052 - __main__ - INFO - POST /api/analyze-symptoms - Status: 200
+2025-04-03 18:00:22,557 - __main__ - INFO - OPTIONS /api/analyze-enhanced - Status: 200
+2025-04-03 18:00:22,821 - __main__ - INFO - POST /api/analyze-enhanced - Status: 401
+2025-04-03 18:08:46,403 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 18:08:58,666 - __main__ - INFO - OPTIONS /api/analyze-enhanced - Status: 200
+2025-04-03 18:08:58,927 - __main__ - INFO - POST /api/analyze-enhanced - Status: 401
+2025-04-03 18:12:41,767 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 18:12:49,718 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 18:12:55,240 - werkzeug - WARNING -  * Debugger is active!
+2025-04-03 18:13:04,463 - werkzeug - WARNING -  * Debugger is active!

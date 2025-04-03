@@ -79,19 +79,10 @@ def generate_overview_pdf(result):
     content.append(Paragraph(result.get('recommendation', 'No recommendation available.'), normal_text))
     content.append(Spacer(1, 5*mm))
     
-    # Top Conditions
-    content.append(Paragraph("Possible Conditions:", section_subtitle))
-    for condition in result.get('possibleConditions', [])[:3]:  # Top 3 conditions
-        content.append(Paragraph(
-            f"<b>{condition.get('name')} ({condition.get('probability')}%)</b>: {condition.get('description', '')}",
-            normal_text
-        ))
-    content.append(Spacer(1, 5*mm))
-    
     # Follow-up Actions
     content.append(Paragraph("Recommended Actions:", section_subtitle))
     actions = []
-    for i, action in enumerate(result.get('followUpActions', []), 1):
+    for i, action in enumerate(result.get('followUpActions', [])[:3], 1):
         actions.append(Paragraph(f"{i}. {action}", list_item_style))
     
     if actions:
@@ -123,7 +114,7 @@ def generate_overview_pdf(result):
     # Risk Factors
     content.append(Paragraph("Risk Factors:", section_subtitle))
     risks = []
-    for i, risk in enumerate(result.get('riskFactors', []), 1):
+    for i, risk in enumerate(result.get('riskFactors', [])[:3], 1):
         risks.append(Paragraph(f"{i}. {risk}", list_item_style))
     
     if risks:
@@ -131,6 +122,38 @@ def generate_overview_pdf(result):
             content.append(risk)
     else:
         content.append(Paragraph("No specific risk factors identified.", normal_text))
+    
+    content.append(Spacer(1, 5*mm))
+    
+    # Diseases
+    if result.get('diseases'):
+        content.append(Paragraph("Possible Diseases:", section_subtitle))
+        for i, disease in enumerate(result.get('diseases', [])[:3], 1):
+            content.append(Paragraph(f"{i}. {disease}", list_item_style))
+        content.append(Spacer(1, 5*mm))
+    
+    # Preventive Measures
+    if result.get('preventiveMeasures'):
+        content.append(Paragraph("Preventive Measures:", section_subtitle))
+        for i, measure in enumerate(result.get('preventiveMeasures', [])[:3], 1):
+            content.append(Paragraph(f"{i}. {measure}", list_item_style))
+        content.append(Spacer(1, 5*mm))
+    
+    # Do's and Don'ts
+    if result.get('dos') or result.get('donts'):
+        content.append(Paragraph("Do's and Don'ts:", section_subtitle))
+        
+        if result.get('dos'):
+            content.append(Paragraph("Do's:", list_item_style))
+            for i, do_item in enumerate(result.get('dos', [])[:3], 1):
+                content.append(Paragraph(f"{i}. {do_item}", list_item_style))
+            content.append(Spacer(1, 3*mm))
+        
+        if result.get('donts'):
+            content.append(Paragraph("Don'ts:", list_item_style))
+            for i, dont_item in enumerate(result.get('donts', [])[:3], 1):
+                content.append(Paragraph(f"{i}. {dont_item}", list_item_style))
+        content.append(Spacer(1, 5*mm))
     
     # Add a medical disclaimer at the end
     content.append(Spacer(1, 10*mm))
@@ -247,7 +270,7 @@ def generate_details_pdf(result):
     
     # Possible Conditions
     content.append(Paragraph("Possible Conditions:", section_subtitle))
-    for condition in result.get('possibleConditions', []):
+    for condition in result.get('possibleConditions', [])[:3]:
         # Condition header
         content.append(Paragraph(
             f"<b>{condition.get('name')} ({condition.get('probability')}%)</b>",
@@ -263,36 +286,29 @@ def generate_details_pdf(result):
         # Recommended Actions for this condition
         if condition_data and 'recommendedActions' in condition_data and condition_data['recommendedActions']:
             content.append(Paragraph("Recommended Actions:", section_title))
-            for i, action in enumerate(condition_data['recommendedActions'], 1):
+            for i, action in enumerate(condition_data['recommendedActions'][:3], 1):
                 content.append(Paragraph(f"{i}. {action}", list_item_style))
             content.append(Spacer(1, 3*mm))
         
         # Preventive Measures for this condition
         if condition_data and 'preventiveMeasures' in condition_data and condition_data['preventiveMeasures']:
             content.append(Paragraph("Preventive Measures:", section_title))
-            for i, measure in enumerate(condition_data['preventiveMeasures'], 1):
+            for i, measure in enumerate(condition_data['preventiveMeasures'][:3], 1):
                 content.append(Paragraph(f"{i}. {measure}", list_item_style))
         
         content.append(Spacer(1, 5*mm))
     
     # General Follow-up Actions
     content.append(Paragraph("Follow-up Actions:", section_subtitle))
-    for i, action in enumerate(result.get('followUpActions', []), 1):
+    for i, action in enumerate(result.get('followUpActions', [])[:3], 1):
         content.append(Paragraph(f"{i}. {action}", normal_text))
     content.append(Spacer(1, 8*mm))
     
     # Risk Factors
     content.append(Paragraph("Risk Factors:", section_subtitle))
-    for i, risk in enumerate(result.get('riskFactors', []), 1):
+    for i, risk in enumerate(result.get('riskFactors', [])[:3], 1):
         content.append(Paragraph(f"{i}. {risk}", normal_text))
     content.append(Spacer(1, 8*mm))
-    
-    # Diseases
-    if result.get('diseases'):
-        content.append(Paragraph("Possible Diseases:", section_subtitle))
-        for i, disease in enumerate(result.get('diseases', []), 1):
-            content.append(Paragraph(f"{i}. {disease}", normal_text))
-        content.append(Spacer(1, 8*mm))
     
     # Meal Recommendations
     if result.get('mealRecommendations') and any(result['mealRecommendations'].values()):
@@ -301,21 +317,21 @@ def generate_details_pdf(result):
         # Breakfast
         if result['mealRecommendations'].get('breakfast'):
             content.append(Paragraph("Breakfast:", section_title))
-            for i, meal in enumerate(result['mealRecommendations']['breakfast'], 1):
+            for i, meal in enumerate(result['mealRecommendations']['breakfast'][:3], 1):
                 content.append(Paragraph(f"{i}. {meal}", normal_text))
             content.append(Spacer(1, 3*mm))
         
         # Lunch
         if result['mealRecommendations'].get('lunch'):
             content.append(Paragraph("Lunch:", section_title))
-            for i, meal in enumerate(result['mealRecommendations']['lunch'], 1):
+            for i, meal in enumerate(result['mealRecommendations']['lunch'][:3], 1):
                 content.append(Paragraph(f"{i}. {meal}", normal_text))
             content.append(Spacer(1, 3*mm))
         
         # Dinner
         if result['mealRecommendations'].get('dinner'):
             content.append(Paragraph("Dinner:", section_title))
-            for i, meal in enumerate(result['mealRecommendations']['dinner'], 1):
+            for i, meal in enumerate(result['mealRecommendations']['dinner'][:3], 1):
                 content.append(Paragraph(f"{i}. {meal}", normal_text))
             
         # Diet Note
@@ -327,29 +343,15 @@ def generate_details_pdf(result):
     # Exercise Plan
     if result.get('exercisePlan'):
         content.append(Paragraph("Exercise Plan:", section_subtitle))
-        for i, exercise in enumerate(result.get('exercisePlan', []), 1):
+        for i, exercise in enumerate(result.get('exercisePlan', [])[:3], 1):
             content.append(Paragraph(f"{i}. {exercise}", normal_text))
         content.append(Spacer(1, 8*mm))
     
-    # Preventive Measures
-    if result.get('preventiveMeasures'):
-        content.append(Paragraph("Preventive Measures:", section_subtitle))
-        for i, measure in enumerate(result.get('preventiveMeasures', []), 1):
-            content.append(Paragraph(f"{i}. {measure}", normal_text))
-        content.append(Spacer(1, 8*mm))
-    
-    # Medicine Recommendations
-    if result.get('medicineRecommendations'):
-        content.append(Paragraph("Medicine Recommendations:", section_subtitle))
-        for i, medicine in enumerate(result.get('medicineRecommendations', []), 1):
-            content.append(Paragraph(f"{i}. {medicine}", normal_text))
-        content.append(Spacer(1, 8*mm))
-    
-    # Ayurvedic Medication Section
+    # Ayurvedic Medication
     if result.get('ayurvedicMedication') and result['ayurvedicMedication'].get('recommendations'):
         content.append(Paragraph("Ayurvedic Medication:", section_subtitle))
         
-        for recommendation in result['ayurvedicMedication']['recommendations']:
+        for recommendation in result['ayurvedicMedication']['recommendations'][:3]:
             # Name
             content.append(Paragraph(f"<b>{recommendation.get('name', 'Ayurvedic Medicine')}</b>", section_title))
             
@@ -374,28 +376,11 @@ def generate_details_pdf(result):
         
         content.append(Spacer(1, 5*mm))
     
-    # Do's and Don'ts
-    if result.get('dos') or result.get('donts'):
-        content.append(Paragraph("Do's and Don'ts:", section_subtitle))
-        
-        if result.get('dos'):
-            content.append(Paragraph("Do's:", section_title))
-            for i, do_item in enumerate(result.get('dos', []), 1):
-                content.append(Paragraph(f"{i}. {do_item}", normal_text))
-            content.append(Spacer(1, 3*mm))
-        
-        if result.get('donts'):
-            content.append(Paragraph("Don'ts:", section_title))
-            for i, dont_item in enumerate(result.get('donts', []), 1):
-                content.append(Paragraph(f"{i}. {dont_item}", normal_text))
-        
-        content.append(Spacer(1, 8*mm))
-    
     # Reports Required
     if result.get('reportsRequired'):
         content.append(Paragraph("Reports Required:", section_subtitle))
         
-        for report in result.get('reportsRequired', []):
+        for report in result.get('reportsRequired', [])[:3]:
             content.append(Paragraph(f"<b>{report.get('name', 'Medical Test')}</b>", section_title))
             
             if report.get('purpose'):

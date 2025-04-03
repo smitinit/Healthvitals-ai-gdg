@@ -755,7 +755,7 @@ def clean_result_text(result: Dict) -> Dict:
     
     # Clean list fields
     for field in ["followUpActions", "riskFactors", "exercisePlan", "diseases", 
-                 "preventiveMeasures", "medicineRecommendations", "dos", "donts"]:
+                 "preventiveMeasures", "dos", "donts"]:
         if field in result:
             result[field] = [clean_text(item) for item in result[field]]
     
@@ -805,7 +805,6 @@ def ensure_comprehensive_analysis(result: Dict) -> Dict:
         "exercisePlan": ["Consult your doctor before starting any exercise regimen"],
         "diseases": ["Analysis could not identify specific diseases"],
         "preventiveMeasures": ["Stay hydrated", "Get adequate rest", "Maintain a balanced diet"],
-        "medicineRecommendations": ["Consult a doctor before taking any medications"],
         "dos": ["Seek professional medical advice", "Take notes of your symptoms", "Stay hydrated"],
         "donts": ["Don't self-diagnose", "Don't ignore persistent symptoms", "Don't delay seeking medical help if symptoms worsen"]
     }

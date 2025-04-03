@@ -31,7 +31,6 @@ export interface AnalysisResult {
   exercisePlan: string[];
   diseases: string[];
   preventiveMeasures: string[];
-  medicineRecommendations: string[];
   ayurvedicMedication?: {
     recommendations: Array<{
       name: string;

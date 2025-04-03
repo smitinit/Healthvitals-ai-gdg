@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { medicalHistoryOptions } from "@/data/symptom-data";
+import { useState, useEffect } from "react";
 
 interface PersonalInfoProps {
   age: string;
@@ -26,6 +27,11 @@ interface PersonalInfoProps {
   setWeight: (weight: string) => void;
 }
 
+// Helper function to count characters instead of words
+const countCharacters = (text: string): number => {
+  return text.length;
+};
+
 export default function PersonalInfo({
   age,
   setAge,
@@ -40,6 +46,25 @@ export default function PersonalInfo({
   weight,
   setWeight,
 }: PersonalInfoProps) {
+  const [medicationsText, setMedicationsText] = useState("");
+  const [allergiesText, setAllergiesText] = useState("");
+  
+  // Function to limit text to 100 characters
+  const limitTo100Chars = (text: string): string => {
+    if (text.length > 100) {
+      return text.substring(0, 100);
+    }
+    return text;
+  };
+  
+  // Apply character limit to medical history text
+  useEffect(() => {
+    const limitedText = limitTo100Chars(medicalHistoryText);
+    if (limitedText !== medicalHistoryText) {
+      setMedicalHistoryText(limitedText);
+    }
+  }, [medicalHistoryText, setMedicalHistoryText]);
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -105,7 +130,12 @@ export default function PersonalInfo({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Common Medical Conditions</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">Common Medical Conditions</label>
+          <span className="text-sm text-muted-foreground">
+            {medicalHistory.length}/3 selected
+          </span>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {medicalHistoryOptions.map((condition) => (
             <div
@@ -118,13 +148,16 @@ export default function PersonalInfo({
                 checked={medicalHistory.includes(condition)}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    setMedicalHistory([...medicalHistory, condition]);
+                    if (medicalHistory.length < 3) {
+                      setMedicalHistory([...medicalHistory, condition]);
+                    }
                   } else {
                     setMedicalHistory(
                       medicalHistory.filter((c) => c !== condition)
                     );
                   }
                 }}
+                disabled={!medicalHistory.includes(condition) && medicalHistory.length >= 3}
                 className="h-4 w-4 rounded border-gray-300"
               />
               <label
@@ -139,15 +172,23 @@ export default function PersonalInfo({
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="medicalHistoryText" className="text-sm font-medium">
-          Additional Medical History
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="medicalHistoryText" className="text-sm font-medium">
+            Additional Medical History
+          </label>
+          <span className="text-xs text-muted-foreground">
+            {countCharacters(medicalHistoryText)}/100 characters
+          </span>
+        </div>
         <Textarea
           id="medicalHistoryText"
           placeholder="Describe any other medical conditions, past surgeries, hospitalizations, or relevant health information in your own words..."
           className="min-h-[120px]"
           value={medicalHistoryText}
-          onChange={(e) => setMedicalHistoryText(e.target.value)}
+          onChange={(e) => {
+            const newText = limitTo100Chars(e.target.value);
+            setMedicalHistoryText(newText);
+          }}
         />
         <p className="text-xs text-muted-foreground">
           This information helps provide a more accurate analysis of your symptoms.
@@ -155,24 +196,44 @@ export default function PersonalInfo({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="medications" className="text-sm font-medium">
-          Current Medications
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="medications" className="text-sm font-medium">
+            Current Medications
+          </label>
+          <span className="text-xs text-muted-foreground">
+            {countCharacters(medicationsText)}/100 characters
+          </span>
+        </div>
         <Textarea
           id="medications"
           placeholder="List any medications you are currently taking..."
           className="min-h-[100px]"
+          value={medicationsText}
+          onChange={(e) => {
+            const newText = limitTo100Chars(e.target.value);
+            setMedicationsText(newText);
+          }}
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="allergies" className="text-sm font-medium">
-          Allergies
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="allergies" className="text-sm font-medium">
+            Allergies
+          </label>
+          <span className="text-xs text-muted-foreground">
+            {countCharacters(allergiesText)}/100 characters
+          </span>
+        </div>
         <Textarea
           id="allergies"
           placeholder="List any allergies you have..."
           className="min-h-[100px]"
+          value={allergiesText}
+          onChange={(e) => {
+            const newText = limitTo100Chars(e.target.value);
+            setAllergiesText(newText);
+          }}
         />
       </div>
     </div>

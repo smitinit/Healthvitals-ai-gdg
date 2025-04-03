@@ -10,16 +10,13 @@ import {
   CheckCircle2,
   ChevronRight,
   Info,
-  Utensils,
-  Dumbbell,
-  Pill,
+  FileDown,
+  Clock,
+  CheckCircle,
   Heart,
   Shield,
   Check,
   X,
-  FileDown,
-  Clock,
-  CheckCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -129,7 +126,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
             Based on your symptoms
           </h4>
           <div className="space-y-3">
-            {result.possibleConditions.map((condition, index) => (
+            {result.possibleConditions.slice(0, 3).map((condition, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 10 }}
@@ -166,7 +163,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               Follow-up Actions
             </h4>
             <ul className="space-y-2">
-              {result.followUpActions.map((action, index) => (
+              {result.followUpActions.slice(0, 3).map((action, index) => (
                 <motion.li
                   key={index}
                   initial={{ opacity: 0, x: -10 }}
@@ -187,7 +184,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               Risk Factors
             </h4>
             <ul className="space-y-2">
-              {result.riskFactors.map((factor, index) => (
+              {result.riskFactors.slice(0, 3).map((factor, index) => (
                 <motion.li
                   key={index}
                   initial={{ opacity: 0, x: -10 }}
@@ -203,62 +200,6 @@ export default function OverviewTab({ result }: OverviewTabProps) {
           </div>
         </div>
 
-        {/* Meal Recommendations */}
-        <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-2 flex items-center">
-            <Utensils className="mr-2 h-4 w-4 text-primary" />
-            Meal Recommendations
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <h5 className="text-sm font-medium mb-1">Breakfast</h5>
-              <ul className="space-y-1">
-                {result.mealRecommendations.breakfast.map((meal, index) => (
-                  <li key={index} className="text-sm text-muted-foreground">
-                    • {meal}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium mb-1">Lunch</h5>
-              <ul className="space-y-1">
-                {result.mealRecommendations.lunch.map((meal, index) => (
-                  <li key={index} className="text-sm text-muted-foreground">
-                    • {meal}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium mb-1">Dinner</h5>
-              <ul className="space-y-1">
-                {result.mealRecommendations.dinner.map((meal, index) => (
-                  <li key={index} className="text-sm text-muted-foreground">
-                    • {meal}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Exercise Plan */}
-        <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-2 flex items-center">
-            <Dumbbell className="mr-2 h-4 w-4 text-primary" />
-            Exercise Plan
-          </h4>
-          <ul className="space-y-2">
-            {result.exercisePlan.map((exercise, index) => (
-              <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-                <ChevronRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <span>{exercise}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
         {/* Diseases and Preventive Measures */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 border rounded-lg">
@@ -267,7 +208,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               Possible Diseases
             </h4>
             <ul className="space-y-2">
-              {result.diseases.map((disease, index) => (
+              {result.diseases.slice(0, 3).map((disease, index) => (
                 <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
                   <ChevronRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <span>{disease}</span>
@@ -282,7 +223,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               Preventive Measures
             </h4>
             <ul className="space-y-2">
-              {result.preventiveMeasures.map((measure, index) => (
+              {result.preventiveMeasures.slice(0, 3).map((measure, index) => (
                 <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
                   <ChevronRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <span>{measure}</span>
@@ -290,22 +231,6 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               ))}
             </ul>
           </div>
-        </div>
-
-        {/* Medicine Recommendations */}
-        <div className="p-4 border rounded-lg">
-          <h4 className="font-medium mb-2 flex items-center">
-            <Pill className="mr-2 h-4 w-4 text-primary" />
-            Medicine Recommendations
-          </h4>
-          <ul className="space-y-2">
-            {result.medicineRecommendations.map((medicine, index) => (
-              <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-                <ChevronRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <span>{medicine}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* Do's and Don'ts */}
@@ -316,7 +241,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               Do's
             </h4>
             <ul className="space-y-2">
-              {result.dos.map((do_item, index) => (
+              {result.dos.slice(0, 3).map((do_item, index) => (
                 <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>{do_item}</span>
@@ -331,7 +256,7 @@ export default function OverviewTab({ result }: OverviewTabProps) {
               Don'ts
             </h4>
             <ul className="space-y-2">
-              {result.donts.map((dont, index) => (
+              {result.donts.slice(0, 3).map((dont, index) => (
                 <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
                   <X className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
                   <span>{dont}</span>

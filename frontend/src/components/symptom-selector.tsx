@@ -33,6 +33,12 @@ export default function SymptomSelector({
   const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null);
 
   const handleAddSymptom = (symptomName: string) => {
+    // Check if max symptoms limit reached
+    if (selectedSymptoms.length >= 7) {
+      toast("Maximum of 7 symptoms allowed");
+      return;
+    }
+
     // Check if symptom already exists
     if (isSymptomAlreadySelected(selectedSymptoms, symptomName)) {
       toast("Symptom already selected");
@@ -137,15 +143,20 @@ export default function SymptomSelector({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Selected Symptoms</h3>
-          {selectedSymptoms.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedSymptoms([])}
-            >
-              Clear All
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {selectedSymptoms.length}/7 symptoms
+            </span>
+            {selectedSymptoms.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedSymptoms([])}
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
         </div>
 
         {selectedSymptoms.length > 0 ? (
@@ -172,12 +183,13 @@ export default function SymptomSelector({
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Severity</span>
+                    <label htmlFor={`severity-${symptom.id}`} className="text-sm">Severity</label>
                     <span className="text-sm font-medium">
                       {symptom.severity}/10
                     </span>
                   </div>
                   <input
+                    id={`severity-${symptom.id}`}
                     type="range"
                     min="1"
                     max="10"
