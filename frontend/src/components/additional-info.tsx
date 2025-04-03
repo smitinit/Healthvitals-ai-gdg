@@ -58,7 +58,7 @@ export default function AdditionalInfo({
         <label htmlFor="lifestyle" className="text-sm font-medium">
           Lifestyle Factors
         </label>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-row-2 md:grid-cols-2 gap-4 md:flex md:flex-row">
           <div className="space-y-2">
             <p className="text-sm">Exercise Frequency</p>
             <Select
