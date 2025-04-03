@@ -79,20 +79,6 @@ def generate_overview_pdf(result):
     content.append(Paragraph(result.get('recommendation', 'No recommendation available.'), normal_text))
     content.append(Spacer(1, 5*mm))
     
-    # Follow-up Actions
-    content.append(Paragraph("Recommended Actions:", section_subtitle))
-    actions = []
-    for i, action in enumerate(result.get('followUpActions', [])[:3], 1):
-        actions.append(Paragraph(f"{i}. {action}", list_item_style))
-    
-    if actions:
-        for action in actions:
-            content.append(action)
-    else:
-        content.append(Paragraph("No specific actions recommended.", normal_text))
-    
-    content.append(Spacer(1, 5*mm))
-    
     # Health Score (if available)
     if 'healthScore' in result:
         content.append(Paragraph(f"Health Score: {result['healthScore']}/10", section_subtitle))
@@ -110,6 +96,37 @@ def generate_overview_pdf(result):
         
         content.append(Paragraph(score_desc, normal_text))
         content.append(Spacer(1, 5*mm))
+    
+    # Possible Conditions (moved here to be more prominent)
+    if result.get('possibleConditions'):
+        content.append(Paragraph("Possible Conditions:", section_subtitle))
+        for condition in result.get('possibleConditions', [])[:3]:
+            # Condition header
+            content.append(Paragraph(
+                f"<b>{condition.get('name')} ({condition.get('probability')}%)</b>",
+                normal_text
+            ))
+            # Description (shortened for overview)
+            description = condition.get('description', 'No description available.')
+            if len(description) > 150:
+                description = description[:150] + "..."
+            content.append(Paragraph(description, normal_text))
+            content.append(Spacer(1, 2*mm))
+        content.append(Spacer(1, 3*mm))
+    
+    # Follow-up Actions
+    content.append(Paragraph("Recommended Actions:", section_subtitle))
+    actions = []
+    for i, action in enumerate(result.get('followUpActions', [])[:3], 1):
+        actions.append(Paragraph(f"{i}. {action}", list_item_style))
+    
+    if actions:
+        for action in actions:
+            content.append(action)
+    else:
+        content.append(Paragraph("No specific actions recommended.", normal_text))
+    
+    content.append(Spacer(1, 5*mm))
     
     # Risk Factors
     content.append(Paragraph("Risk Factors:", section_subtitle))
@@ -302,12 +319,6 @@ def generate_details_pdf(result):
     content.append(Paragraph("Follow-up Actions:", section_subtitle))
     for i, action in enumerate(result.get('followUpActions', [])[:3], 1):
         content.append(Paragraph(f"{i}. {action}", normal_text))
-    content.append(Spacer(1, 8*mm))
-    
-    # Risk Factors
-    content.append(Paragraph("Risk Factors:", section_subtitle))
-    for i, risk in enumerate(result.get('riskFactors', [])[:3], 1):
-        content.append(Paragraph(f"{i}. {risk}", normal_text))
     content.append(Spacer(1, 8*mm))
     
     # Meal Recommendations
