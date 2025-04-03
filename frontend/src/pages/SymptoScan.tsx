@@ -177,7 +177,7 @@ export default function SymptomScanEnhanced({
       const endpoint = isQuickAnalysis
         ? `${API_BASE_URL}/api/quick-analyze`
         : `${API_BASE_URL}/api/analyze-symptoms`;
-      // console.log("Sending request to:", endpoint);
+      // console.log("Sending request to:", API_BASE_URL);
 
       // Get the token if user is signed in
       const headers: HeadersInit = {

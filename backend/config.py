@@ -13,7 +13,7 @@ class Config:
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     
     # CORS configuration
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')
+    CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'https://healthvitals-ai-43006.web.app').split(',')
     
     # Rate limiting
     RATELIMIT_ENABLED = True
