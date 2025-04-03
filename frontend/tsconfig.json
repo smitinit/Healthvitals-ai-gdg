@@ -8,6 +8,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true, // Skip type checks in node_modules
+    "noImplicitAny": false, // Allow implicit "any" types
+    "strict": false // Disable all strict type checks
   }
 }

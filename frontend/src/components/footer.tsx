@@ -161,6 +161,10 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-slate-800 text-center text-slate-400 text-sm">
           <p>
             © {new Date().getFullYear()} HealthVitals AI. All rights reserved.
+            SymptoScan provides preliminary health insights based on user
+            inputs, offering general guidance and awareness. This site is
+            currently in beta and is not a substitute for professional medical
+            diagnosis, or treatment.
           </p>
         </div>
       </div>

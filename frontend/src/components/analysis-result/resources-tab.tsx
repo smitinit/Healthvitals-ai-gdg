@@ -9,6 +9,10 @@ export default function ResourcesTab() {
         <h3 className="text-lg font-semibold mb-4">
           Relevant Medical Articles
         </h3>
+        <h4 className="text-red-500 m-[1rem]">
+          <strong>NOTE: </strong> THIS FEATURE IS CURRENTLY IN DEVELOPMENT! (FOR
+          NOW IT INCLUDES DUMMY UI ONLY).
+        </h4>
         <div className="space-y-4">
           {medicalArticles.map((article) => (
             <div key={article.id} className="p-4 border rounded-lg">

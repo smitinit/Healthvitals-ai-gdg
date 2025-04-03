@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/card";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import API_BASE_URL from "@/config";
 
 export default function SymptomScanDemo() {
   const [step, setStep] = useState(1);
@@ -36,40 +35,44 @@ export default function SymptomScanDemo() {
     setError("");
 
     try {
-      console.log("Sending API request with:", {
-        symptoms,
-        age
-      });
+      // console.log("Sending API request with:", {
+      //   symptoms,
+      //   age,
+      // });
 
       const response = await fetch(`${API_BASE_URL}/quick-analyze`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           symptoms,
-          age
+          age,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API response not OK:', response.status, errorText);
-        throw new Error(`Failed to analyze symptoms: ${response.status} ${response.statusText}`);
+        console.error("API response not OK:", response.status, errorText);
+        throw new Error(
+          `Failed to analyze symptoms: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
-      console.log("API response received:", data);
-      
+      // console.log("API response received:", data);
+
       setResult({
         possibleConditions: data.possibleConditions || [],
-        recommendation: data.recommendation || "No specific recommendation available. Please consult a healthcare professional.",
+        recommendation:
+          data.recommendation ||
+          "No specific recommendation available. Please consult a healthcare professional.",
         urgency: data.urgency || "medium",
       });
-      
+
       setStep(2);
     } catch (error) {
-      console.error('Error analyzing symptoms:', error);
+      console.error("Error analyzing symptoms:", error);
       setError("There was an error analyzing your symptoms. Please try again.");
     } finally {
       setIsLoading(false);
@@ -140,9 +143,7 @@ export default function SymptomScanDemo() {
                   </div>
 
                   {error && (
-                    <div className="text-sm text-red-500 mt-2">
-                      {error}
-                    </div>
+                    <div className="text-sm text-red-500 mt-2">{error}</div>
                   )}
                 </div>
               </form>
@@ -226,10 +227,10 @@ export default function SymptomScanDemo() {
 
                 <div className="pt-2 text-sm text-muted-foreground">
                   <p>
-                    <strong>Note:</strong> This is a preliminary analysis. 
-                    For a comprehensive assessment, please use the full 
-                    SymptomScan feature. Always consult with a healthcare 
-                    professional for medical advice.
+                    <strong>Note:</strong> This is a preliminary analysis. For a
+                    comprehensive assessment, please use the full SymptomScan
+                    feature. Always consult with a healthcare professional for
+                    medical advice.
                   </p>
                 </div>
               </div>

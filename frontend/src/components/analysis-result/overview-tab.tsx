@@ -11,8 +11,8 @@ import {
   ChevronRight,
   Info,
   FileDown,
-  Clock,
-  CheckCircle,
+  // Clock,
+  // CheckCircle,
   Heart,
   Shield,
   Check,
@@ -20,12 +20,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+import API_BASE_URL from "@/config";
 
 interface OverviewTabProps {
   result: AnalysisResult;
@@ -33,63 +29,66 @@ interface OverviewTabProps {
 
 export default function OverviewTab({ result }: OverviewTabProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case "high":
-        return "bg-red-500";
-      case "medium":
-        return "bg-yellow-500";
-      case "low":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
 
-  const getUrgencyIcon = (urgency: string) => {
-    switch (urgency) {
-      case "high":
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case "medium":
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-      case "low":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return null;
-    }
-  };
-  
+  // const getUrgencyColor = (urgency: string) => {
+  //   switch (urgency) {
+  //     case "high":
+  //       return "bg-red-500";
+  //     case "medium":
+  //       return "bg-yellow-500";
+  //     case "low":
+  //       return "bg-green-500";
+  //     default:
+  //       return "bg-gray-500";
+  //   }
+  // };
+
+  // const getUrgencyIcon = (urgency: string) => {
+  //   switch (urgency) {
+  //     case "high":
+  //       return <AlertTriangle className="h-5 w-5 text-red-500" />;
+  //     case "medium":
+  //       return <Clock className="h-5 w-5 text-yellow-500" />;
+  //     case "low":
+  //       return <CheckCircle className="h-5 w-5 text-green-500" />;
+  //     default:
+  //       return null;
+  //   }
+  // };
+
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      
+
       // Make API request to generate PDF
-      const response = await fetch('/api/public/generate-overview-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(result),
-      });
-      
+      const response = await fetch(
+        `${API_BASE_URL}/api/public/generate-overview-pdf`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(result),
+        }
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+        throw new Error("Failed to generate PDF");
       }
-      
+
       // Download the PDF file
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'healthvitals-overview-report.pdf';
+      a.download = "healthvitals-overview-report.pdf";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-      alert('Failed to download PDF report. Please try again later.');
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download PDF report. Please try again later.");
     } finally {
       setIsDownloading(false);
     }
@@ -209,7 +208,10 @@ export default function OverviewTab({ result }: OverviewTabProps) {
             </h4>
             <ul className="space-y-2">
               {result.diseases.slice(0, 3).map((disease, index) => (
-                <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                <li
+                  key={index}
+                  className="text-sm text-muted-foreground flex items-start gap-2"
+                >
                   <ChevronRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <span>{disease}</span>
                 </li>
@@ -224,7 +226,10 @@ export default function OverviewTab({ result }: OverviewTabProps) {
             </h4>
             <ul className="space-y-2">
               {result.preventiveMeasures.slice(0, 3).map((measure, index) => (
-                <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                <li
+                  key={index}
+                  className="text-sm text-muted-foreground flex items-start gap-2"
+                >
                   <ChevronRight className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                   <span>{measure}</span>
                 </li>
@@ -242,7 +247,10 @@ export default function OverviewTab({ result }: OverviewTabProps) {
             </h4>
             <ul className="space-y-2">
               {result.dos.slice(0, 3).map((do_item, index) => (
-                <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                <li
+                  key={index}
+                  className="text-sm text-muted-foreground flex items-start gap-2"
+                >
                   <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>{do_item}</span>
                 </li>
@@ -257,7 +265,10 @@ export default function OverviewTab({ result }: OverviewTabProps) {
             </h4>
             <ul className="space-y-2">
               {result.donts.slice(0, 3).map((dont, index) => (
-                <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
+                <li
+                  key={index}
+                  className="text-sm text-muted-foreground flex items-start gap-2"
+                >
                   <X className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
                   <span>{dont}</span>
                 </li>
@@ -269,13 +280,13 @@ export default function OverviewTab({ result }: OverviewTabProps) {
 
       {/* Download Report Button */}
       <div className="flex justify-center mt-8">
-        <Button 
-          onClick={handleDownloadPDF} 
+        <Button
+          onClick={handleDownloadPDF}
           disabled={isDownloading}
           className="w-full max-w-md"
         >
           <FileDown className="mr-2 h-4 w-4" />
-          {isDownloading ? 'Generating PDF...' : 'Download Overview Report'}
+          {isDownloading ? "Generating PDF..." : "Download Overview Report"}
         </Button>
       </div>
     </div>

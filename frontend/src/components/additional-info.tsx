@@ -23,14 +23,13 @@ type AdditionalInfoProps = {
   setAllergies: (value: string) => void;
   currentMedications: string;
   setCurrentMedications: (value: string) => void;
-}
+};
 
 export default function AdditionalInfo({
   exerciseFrequency,
   setExerciseFrequency,
   sleepQuality,
   setSleepQuality,
-  stressLevel,
   setStressLevel,
   dietPreference,
   setDietPreference,
@@ -62,7 +61,10 @@ export default function AdditionalInfo({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <p className="text-sm">Exercise Frequency</p>
-            <Select value={exerciseFrequency} onValueChange={setExerciseFrequency}>
+            <Select
+              value={exerciseFrequency}
+              onValueChange={setExerciseFrequency}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select frequency" />
               </SelectTrigger>

@@ -18,6 +18,10 @@ export default function DoctorsTab() {
         <h3 className="text-lg font-semibold mb-4">
           Nearby Healthcare Providers
         </h3>
+        <h4 className="text-red-500 m-[1rem]">
+          <strong>NOTE: </strong> THIS FEATURE IS CURRENTLY IN DEVELOPMENT! (FOR
+          NOW IT INCLUDES DUMMY UI ONLY).
+        </h4>
         <div className="space-y-4">
           {nearbyDoctors.map((doctor) => (
             <div
