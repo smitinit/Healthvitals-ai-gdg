@@ -125,16 +125,17 @@ export default function Home() {
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">
                 Our core technology that analyzes your symptoms and provides
-                accurate health insights
+                accurate health insights.
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="flex flex-col md:flex-row gap-12 items-center justify-center">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
                 viewport={{ once: true }}
+                // className="justify-self-center text-center mx-auto"
               >
                 <h3 className="text-2xl font-bold text-primary">
                   How SymptomScan Works
@@ -184,7 +185,7 @@ export default function Home() {
                   ))}
                 </ul>
 
-                <div className="mt-8">
+                <div className="mt-8 justify-self-end">
                   <Link to="/symptoscan-pro">
                     <Button size="lg" variant="outline" className="gap-2">
                       <ArrowRight className="h-4 w-4" />

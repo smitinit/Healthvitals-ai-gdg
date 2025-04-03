@@ -261,6 +261,9 @@ export default function SymptomScanEnhanced({
       }
     } finally {
       setIsLoading(false);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 100);
     }
   };
 
@@ -282,6 +285,9 @@ export default function SymptomScanEnhanced({
     setCurrentMedications("");
     setResult(null);
     setShowConfetti(false);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
   };
 
   const handleNextStep = () => {
@@ -290,6 +296,9 @@ export default function SymptomScanEnhanced({
     if (step < 4) {
       setStep(step + 1);
     }
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
   };
 
   const handlePrevStep = () => {
@@ -298,6 +307,9 @@ export default function SymptomScanEnhanced({
     if (step > 1) {
       setStep(step - 1);
     }
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
   };
 
   // This ensures the result and loading state synchronize with step 4
@@ -326,9 +338,9 @@ export default function SymptomScanEnhanced({
                 </>
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="w-[95%]">
               {isPro
-                ? "Our comprehensive AI-powered health analysis tool. Get detailed insights and personalized recommendations."
+                ? "Our comprehensive AI-powered health analysis tool. Get detailed insights and personalized recommendations. Fill every inputs for more accurate results."
                 : "Quick AI-powered symptom checker. Get a basic assessment of your symptoms in seconds."}
             </CardDescription>
           </div>
@@ -503,6 +515,11 @@ export default function SymptomScanEnhanced({
           </>
         )}
       </CardFooter>
+      {isLoading && (
+        <small className="text-center text-muted-foreground">
+          Loading results, can take up to 30-40 seconds.
+        </small>
+      )}
       <ConfettiEffect trigger={showConfetti} />
     </Card>
   );
