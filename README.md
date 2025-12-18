@@ -16,6 +16,9 @@ HealthVitals AI is an advanced health monitoring and symptom analysis applicatio
 - **Secure Authentication**: User management powered by Clerk.
 - **Privacy Focused**: IP hashing for anonymous usage and secure data handling.
 
+![alt text](<Screenshot 2025-12-18 132856.png>)
+![alt text](<Screenshot 2025-12-18 132923.png>)
+
 ## 🛠️ Tech Stack
 
 ### Frontend
